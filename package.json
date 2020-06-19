@@ -1,0 +1,19 @@
+{
+  "name": "botium-crawler",
+  "version": "1.0.0",
+  "homepage": "https://bitbucket.org/botiumcoreteam/botium-crawler#readme",
+  "scripts": {
+    "start": "node main.js",
+    "start:dev": "DEBUG=main node main.js"
+  },
+  "dependencies": {
+    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#master",
+    "botium-core": "https://github.com/codeforequity-at/botium-core.git#develop",
+    "debug": "^4.1.1",
+    "lodash": "^4.17.15"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/botiumcoreteam/botium-crawler.git"
+  }
+}
