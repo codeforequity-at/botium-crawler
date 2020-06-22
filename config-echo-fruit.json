@@ -1,0 +1,99 @@
+{
+  "caps": {
+    "RETRY_USERSAYS_ONERROR_REGEXP": [],
+    "RETRY_USERSAYS_NUMRETRIES": null,
+    "RETRY_USERSAYS_FACTOR": null,
+    "RETRY_USERSAYS_MINTIMEOUT": null,
+    "CONTAINERMODE": "echo",
+    "SIMPLEREST_INBOUND_REDISURL": "redis://localhost:6379",
+    "FBWEBHOOK_REDISURL": "redis://localhost:6379",
+    "WHATSAPP_REDISURL": "redis://localhost:6379",
+    "ECHO_ANSWERS": [
+      {
+        "input": ["Fruits"],
+        "output": {
+          "messageText": "Here are some fruits",
+          "buttons": [
+            { "text": "Apple" },
+            { "text": "Pear" }
+          ],
+          "nlp": {
+            "intent": {
+              "name": "Fruits",
+              "confidence": 0.8
+            }
+          }
+        }
+      },
+      {
+        "input": ["Apple"],
+        "output": {
+          "messageText": "Apple colors",
+          "buttons": [
+            { "text": "Red" },
+            { "text": "Green" }
+          ],
+          "nlp": {
+            "intent": {
+              "name": "Apple",
+              "confidence": 0.8
+            }
+          }
+        }
+      },
+      {
+        "input": ["Pear"],
+        "output": {
+          "messageText": "Pear colors",
+          "buttons": [
+            { "text": "Green" },
+            { "text": "Yellow" }
+          ],
+          "nlp": {
+            "intent": {
+              "name": "Pear",
+              "confidence": 0.8
+            }
+          }
+        }
+      },
+      {
+        "input": ["Red"],
+        "output": {
+          "messageText": "Red apple",
+          "nlp": {
+            "intent": {
+              "name": "Red",
+              "confidence": 0.8
+            }
+          }
+        }
+      },
+      {
+        "input": ["Yellow"],
+        "output": {
+          "messageText": "Yellow pear",
+          "nlp": {
+            "intent": {
+              "name": "Yellow",
+              "confidence": 0.8
+            }
+          }
+        }
+      },
+      {
+        "input": ["Green"],
+        "output": {
+          "messageText": "Green apple or pear",
+          "nlp": {
+            "intent": {
+              "name": "Green",
+              "confidence": 0.8
+            }
+          }
+        }
+      }
+    ]
+  },
+  "envs": {}
+}

@@ -1,0 +1,19 @@
+{
+  "caps": {
+    "RETRY_USERSAYS_ONERROR_REGEXP": [],
+    "RETRY_USERSAYS_NUMRETRIES": null,
+    "RETRY_USERSAYS_FACTOR": null,
+    "RETRY_USERSAYS_MINTIMEOUT": null,
+    "CONTAINERMODE": "directline3",
+    "DIRECTLINE3_SECRET": "XBlcKo_40Gg.vVERiqeLPKcjpv_cGRE_1BIKRgo-c2Nruf_3mZUqhT8",
+    "DIRECTLINE3_BUTTON_TYPE": "message",
+    "DIRECTLINE3_BUTTON_VALUE_FIELD": "text",
+    "DIRECTLINE3_WEBSOCKET": false,
+    "DIRECTLINE3_POLLINGINTERVAL": 1000,
+    "DIRECTLINE3_GENERATE_USERNAME": false,
+    "SIMPLEREST_INBOUND_REDISURL": "redis://localhost:6379",
+    "FBWEBHOOK_REDISURL": "redis://localhost:6379",
+    "WHATSAPP_REDISURL": "redis://localhost:6379"
+  },
+  "envs": {}
+}
