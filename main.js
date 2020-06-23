@@ -8,18 +8,18 @@ const OUT_DIR = 'Convos'
 const DEPTH = 4
 
 const main = async () => {
-    debug('--- Botium-Crawler ---')
-    try {
-        const crawler = new Crawler(config)
-        const convos = await crawler.crawl(ENTRY_POINT, DEPTH)
+  debug('--- Botium-Crawler ---')
+  try {
+    const crawler = new Crawler(config)
+    const convos = await crawler.crawl(ENTRY_POINT, DEPTH)
 
-        const convoHandler = new ConvoHandler(crawler.driver)
-        await convoHandler.logConvosOnConsole(convos)
-        await convoHandler.persistConvosInFiles(convos, OUT_DIR)
-    } catch (e) {
-        console.log(e)
-        debug('Botium-Crawler failed: ', e)
-    }
+    const convoHandler = new ConvoHandler(crawler.driver)
+    await convoHandler.logConvosOnConsole(convos)
+    await convoHandler.persistConvosInFiles(convos, OUT_DIR)
+  } catch (e) {
+    console.log(e)
+    debug('Botium-Crawler failed: ', e)
+  }
 }
 
 main().then(() => debug('Botium-Crawler finished successfully'))
