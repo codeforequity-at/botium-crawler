@@ -8,13 +8,14 @@
     "start:dev:verbose": "DEBUG=botium-* node main.js"
   },
   "dependencies": {
-    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
     "botium-connector-directline3": "https://github.com/codeforequity-at/botium-connector-directline3.git#master",
+    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
     "botium-core": "https://github.com/codeforequity-at/botium-core.git#develop",
     "debug": "^4.1.1",
     "flat": "^5.0.0",
     "lodash": "^4.17.15",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "winston": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
@@ -22,7 +23,8 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-standard": "^4.0.1",
+    "winston-daily-rotate-file": "^4.5.0"
   },
   "repository": {
     "type": "git",

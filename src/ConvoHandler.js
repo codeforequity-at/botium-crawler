@@ -1,9 +1,11 @@
 const fs = require('fs')
+const path = require('path')
 const rimraf = require('rimraf')
 const _ = require('lodash')
 const debug = require('debug')('botium-crawler-convo-handler')
 
 const SCRIPTING_FORMAT = 'SCRIPTING_FORMAT_TXT'
+// const SCRIPTING_FORMAT = 'SCRIPTING_FORMAT_JSON'
 
 module.exports = class ConvoHandler {
   constructor (botDriver) {
@@ -12,14 +14,13 @@ module.exports = class ConvoHandler {
 
   async persistConvosInFiles (convos, outDir) {
     const scripts = await this._decompileConvos(convos)
-
     if (fs.existsSync(outDir)) {
       rimraf.sync(outDir)
     }
     fs.mkdirSync(outDir)
 
     scripts.forEach((script) => {
-      const fileName = `./${outDir}/${script.substring(0, script.indexOf('\n'))}`
+      const fileName = path.join(outDir, script.substring(0, script.indexOf('\n')))
       fs.writeFileSync(fileName, script)
       debug(`The '${fileName}' file is persisted`)
     })

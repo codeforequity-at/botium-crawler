@@ -4,11 +4,12 @@ const { getAllValuesByKey } = require('./util')
 
 const convos = []
 const visitedPath = []
-let tempConvo = {}
 
 module.exports = class Crawler {
-  constructor (args) {
+  constructor (args, callbackValidationError) {
     this.driver = new BotDriver(args && args.caps, args && args.sources, args && args.envs)
+    this.callbackValidationError = callbackValidationError
+    this.entryPointId = 0
   }
 
   async crawl (entryPoints, depth = 5, ignoreButtons = []) {
@@ -20,41 +21,47 @@ module.exports = class Crawler {
     this.depth = depth
     this.ignoreButtons = ignoreButtons
 
-    for (let i = 0; i < entryPoints.length; i++) {
-      const entryPointText = entryPoints[i]
-      if (typeof entryPointText !== 'string') {
-        debug('The entryPoints param has to consist of strings')
-        break
-      }
-      const entryPoint = {
-        sender: 'me',
-        messageText: entryPointText
-      }
-
-      convos[i] = []
-      visitedPath[i] = []
-
-      while (!visitedPath[i].includes(entryPoint.messageText)) {
-        await this._start()
-
-        tempConvo = {
-          header: {
-            name: `${i}.${convos[i].length}_${entryPoint.messageText}`
-          },
-          conversation: []
-        }
-
-        await this._makeConversation(entryPoint, 0, entryPoint.messageText, i)
-
-        await this._stop()
-      }
-    }
+    await Promise.all(entryPoints.map(async (entryPointText) => {
+      return this._makeConversations(entryPointText, Number(convos.length))
+    }))
 
     debug('Crawler finished')
     return convos
   }
 
-  async _makeConversation (userMessage, depth, path, entryPointId) {
+  async _makeConversations (entryPointText, entryPointId) {
+    if (typeof entryPointText !== 'string') {
+      debug('The entryPoints param has to consist of strings')
+      return
+    }
+    const entryPoint = {
+      sender: 'me',
+      messageText: entryPointText
+    }
+
+    convos[entryPointId] = []
+    visitedPath[entryPointId] = []
+
+    while (!visitedPath[entryPointId].includes(entryPoint.messageText)) {
+      await this._start()
+      const params = {
+        userMessage: entryPoint,
+        depth: 0,
+        path: entryPoint.messageText,
+        entryPointId,
+        tempConvo: {
+          header: {
+            name: `${entryPointId}.${convos[entryPointId].length}_${entryPoint.messageText}`
+          },
+          conversation: []
+        }
+      }
+      await this._makeConversation(params)
+      await this._stop()
+    }
+  }
+
+  async _makeConversation ({ userMessage, depth, path, entryPointId, tempConvo }) {
     try {
       tempConvo.conversation.push(userMessage)
       await this.container.UserSays(userMessage)
@@ -64,7 +71,7 @@ module.exports = class Crawler {
       const buttons = getAllValuesByKey(answer)
       if (depth >= this.depth || (buttons.length === 0 && !visitedPath[entryPointId].includes(path))) {
         debug(`Conversation successfully end on '${path}' path`)
-        convos[entryPointId].push(tempConvo)
+        convos[entryPointId].push(Object.assign({}, tempConvo))
         visitedPath[entryPointId].push(path)
         return
       }
@@ -76,11 +83,20 @@ module.exports = class Crawler {
             if (depth === 0) {
               tempConvo.header.name = `${tempConvo.header.name}_${button.text}`
             }
-            await this._makeConversation({
-              sender: 'me',
-              messageText: button.text,
-              buttons: [button]
-            }, depth + 1, path + button.text, entryPointId)
+
+            const params = {
+              userMessage: {
+                sender: 'me',
+                messageText: button.text,
+                buttons: [button]
+              },
+              depth: depth + 1,
+              path: path + button.text,
+              entryPointId,
+              tempConvo
+            }
+            await this._makeConversation(params)
+
             return
           }
         }

@@ -1,5 +1,6 @@
 const flatten = require('flat')
 const _ = require('lodash')
+const logger = require('./logger')
 
 const SOURCE_DATA = 'sourceData'
 const BUTTONS = 'buttons'
@@ -25,6 +26,11 @@ const getAllValuesByKey = (object, key = BUTTONS, exceptUnder = SOURCE_DATA) => 
   return values
 }
 
+const validationErrorHandler = (message, payload) => {
+  logger.error(message, { payload })
+}
+
 module.exports = {
-  getAllValuesByKey
+  getAllValuesByKey,
+  validationErrorHandler
 }

@@ -1,5 +1,8 @@
 logs
 node_modules
 *.log
+*audit.json
 /.idea
 /Convos
+/generated
+/samples
