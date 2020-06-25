@@ -4,6 +4,7 @@
     "RETRY_USERSAYS_NUMRETRIES": null,
     "RETRY_USERSAYS_FACTOR": null,
     "RETRY_USERSAYS_MINTIMEOUT": null,
+    "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
     "CONTAINERMODE": "directline3",
     "DIRECTLINE3_SECRET": "XBlcKo_40Gg.vVERiqeLPKcjpv_cGRE_1BIKRgo-c2Nruf_3mZUqhT8",
     "DIRECTLINE3_BUTTON_TYPE": "message",

@@ -34,24 +34,23 @@ module.exports = class Crawler {
       debug('The entryPoints param has to consist of strings')
       return
     }
-    const entryPoint = {
-      sender: 'me',
-      messageText: entryPointText
-    }
 
     convos[entryPointId] = []
     visitedPath[entryPointId] = []
 
-    while (!visitedPath[entryPointId].includes(entryPoint.messageText)) {
+    while (!visitedPath[entryPointId].includes(entryPointText)) {
       await this._start()
       const params = {
-        userMessage: entryPoint,
+        userMessage: {
+          sender: 'me',
+          messageText: entryPointText
+        },
         depth: 0,
-        path: entryPoint.messageText,
+        path: entryPointText,
         entryPointId,
         tempConvo: {
           header: {
-            name: `${entryPointId}.${convos[entryPointId].length}_${entryPoint.messageText}`
+            name: `${entryPointId}.${convos[entryPointId].length}_${entryPointText}`
           },
           conversation: []
         }
@@ -91,7 +90,7 @@ module.exports = class Crawler {
                 buttons: [button]
               },
               depth: depth + 1,
-              path: path + button.text,
+              path: button.payload ? path + button.text + JSON.stringify(button.payload) : path + button.text,
               entryPointId,
               tempConvo
             }
