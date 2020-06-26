@@ -22,13 +22,15 @@ module.exports = class ConvoHandler {
     scriptObjects.forEach((scriptObject) => {
       const script = scriptObject.script
       const scriptName = path.join(outputDir,
-        slugify(script.substring(0, script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase())
+        slugify(
+          script.substring(0, script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase() +
+        '.convo.txt')
       fs.writeFileSync(scriptName, script)
       debug(`The '${scriptName}' file is persisted`)
 
       scriptObject.utterances.forEach((utterance) => {
         const utteranceName = path.join(outputDir, utterance.name)
-        fs.writeFileSync(utteranceName, utterance.script)
+        fs.writeFileSync(utteranceName + '.utterances.txt', utterance.script)
       })
     })
   }
