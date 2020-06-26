@@ -7,7 +7,8 @@ const ConvoHandler = require('./src/ConvoHandler')
 const { validationErrorHandler } = require('./src/util')
 
 const ENTRY_POINTS = ['Fruits', 'Apple', 'Pear']
-const IGNORE_BUTTONS = ['Red']
+const IGNORE_STEPS = ['Red']
+const INCOMPREHENSIONS = ['Unknown command']
 // const ENTRY_POINTS = ['help']
 // const IGNORE_BUTTONS = ['card broken:lang', 'invalidCard']
 const OUT_DIR = path.join(__dirname, 'generated')
@@ -16,11 +17,14 @@ const DEPTH = 4
 const main = async () => {
   debug('--- Botium-Crawler ---')
   try {
-    const crawler = new Crawler(config, validationErrorHandler)
-    const convos = await crawler.crawl(ENTRY_POINTS, DEPTH, IGNORE_BUTTONS)
+    const crawler = new Crawler({ config: config.botium, incomprehensions: INCOMPREHENSIONS }, validationErrorHandler)
+    const convos = await crawler.crawl({
+      entryPoints: ENTRY_POINTS,
+      depth: DEPTH,
+      ignoreSteps: IGNORE_STEPS
+    })
 
-    const convoHandler = new ConvoHandler(crawler.driver)
-    await convoHandler.persistConvosInFiles(convos, OUT_DIR)
+    await new ConvoHandler(crawler.compiler).persistConvosInFiles(convos, OUT_DIR)
   } catch (e) {
     debug('Botium-Crawler failed: ', e)
   }

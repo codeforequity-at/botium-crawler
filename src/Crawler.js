@@ -6,20 +6,22 @@ const convos = []
 const visitedPath = []
 
 module.exports = class Crawler {
-  constructor (args, callbackValidationError) {
-    this.driver = new BotDriver(args && args.caps, args && args.sources, args && args.envs)
+  constructor ({ config, incomprehensions }, callbackValidationError) {
+    this.driver = new BotDriver(config && config.Capabilities, config && config.Sources, config && config.Envs)
+    this.compiler = this.driver.BuildCompiler()
+    this.incomprehensions = incomprehensions
     this.callbackValidationError = callbackValidationError
     this.entryPointId = 0
   }
 
-  async crawl (entryPoints, depth = 5, ignoreButtons = []) {
+  async crawl ({ entryPoints, depth = 5, ignoreSteps = [] }) {
     debug(`A crawler started with '${entryPoints}' entry point and ${depth} depth`)
     if (!Array.isArray(entryPoints)) {
-      debug('The entryPoints param has be an array of strings')
+      debug('The entryPoints param has to be an array of strings')
       return convos
     }
     this.depth = depth
-    this.ignoreButtons = ignoreButtons
+    this.ignoreSteps = ignoreSteps
 
     await Promise.all(entryPoints.map(async (entryPointText) => {
       return this._makeConversations(entryPointText, Number(convos.length))
@@ -67,6 +69,8 @@ module.exports = class Crawler {
       const answer = await this.container.WaitBotSays()
       tempConvo.conversation.push(answer)
 
+      await this._validateAnswer(answer, userMessage)
+
       const buttons = getAllValuesByKey(answer)
       if (depth >= this.depth || (buttons.length === 0 && !visitedPath[entryPointId].includes(path))) {
         debug(`Conversation successfully end on '${path}' path`)
@@ -78,7 +82,7 @@ module.exports = class Crawler {
       if (buttons) {
         for (const button of buttons) {
           if (!visitedPath[entryPointId].includes(path + button.text) &&
-            !(this.ignoreButtons.includes(button.text) || this.ignoreButtons.includes(button.payload))) {
+            !(this.ignoreSteps.includes(button.text) || this.ignoreSteps.includes(button.payload))) {
             if (depth === 0) {
               tempConvo.header.name = `${tempConvo.header.name}_${button.text}`
             }
@@ -145,5 +149,15 @@ module.exports = class Crawler {
       }
     }
     debug('Conversation container stopped.')
+  }
+
+  async _validateAnswer (botAnswer, userMessage) {
+    // INCOMPREHENSION VALIDATION
+    for (const incomprehension of this.incomprehensions) {
+      if (this.compiler.Match(botAnswer, incomprehension)) {
+        debug('User message is failure to understand by the bot', { userMessage, botAnswer })
+        this.callbackValidationError('User message is failure to understand by the bot', { userMessage, botAnswer })
+      }
+    }
   }
 }

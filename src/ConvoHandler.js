@@ -1,37 +1,33 @@
 const fs = require('fs')
 const path = require('path')
 const util = require('util')
-const rimraf = require('rimraf')
 const _ = require('lodash')
 const slugify = require('slugify')
 const debug = require('debug')('botium-crawler-convo-handler')
 const Capabilities = require('botium-core').Capabilities
 
 const SCRIPTING_FORMAT = 'SCRIPTING_FORMAT_TXT'
-// const SCRIPTING_FORMAT = 'SCRIPTING_FORMAT_JSON'
 
 module.exports = class ConvoHandler {
-  constructor (botDriver) {
-    this.botDriver = botDriver
-    this.compiler = this.botDriver.BuildCompiler()
+  constructor (compiler) {
+    this.compiler = compiler
   }
 
-  async persistConvosInFiles (convos, outDir) {
+  async persistConvosInFiles (convos, outputDir) {
     const scriptObjects = await this._decompileConvos(convos)
-    if (fs.existsSync(outDir)) {
-      rimraf.sync(outDir)
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir)
     }
-    fs.mkdirSync(outDir)
 
     scriptObjects.forEach((scriptObject) => {
       const script = scriptObject.script
-      const scriptName = path.join(outDir,
+      const scriptName = path.join(outputDir,
         slugify(script.substring(0, script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase())
       fs.writeFileSync(scriptName, script)
       debug(`The '${scriptName}' file is persisted`)
 
       scriptObject.utterances.forEach((utterance) => {
-        const utteranceName = path.join(outDir, utterance.name)
+        const utteranceName = path.join(outputDir, utterance.name)
         fs.writeFileSync(utteranceName, utterance.script)
       })
     })
