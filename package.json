@@ -1,12 +1,27 @@
 {
   "name": "botium-crawler",
   "version": "1.0.0",
-  "homepage": "https://bitbucket.org/botiumcoreteam/botium-crawler#readme",
+  "engines": {
+    "node": ">=10"
+  },
+  "bin": {
+    "botium-crawler-cli": "./bin/cli.js"
+  },
   "scripts": {
     "start": "node main.js",
     "start:dev": "DEBUG=botium-crawler* node main.js",
     "start:dev:verbose": "DEBUG=botium-* node main.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codeforequity-at/botium-crawler.git"
+  },
+  "author": "Botium GmbH",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/codeforequity-at/botium-core/issues"
+  },
+  "homepage": "https://www.botium.ai",
   "dependencies": {
     "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
     "botium-connector-alexa-avs": "https://github.com/codeforequity-at/botium-connector-alexa-avs.git#master",
@@ -49,9 +64,5 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "winston-daily-rotate-file": "^4.5.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@bitbucket.org/botiumcoreteam/botium-crawler.git"
   }
 }
