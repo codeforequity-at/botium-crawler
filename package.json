@@ -54,6 +54,7 @@
     "flat": "^5.0.0",
     "lodash": "^4.17.15",
     "winston": "^3.3.2",
+    "winston-daily-rotate-file": "^4.5.0",
     "yargs": "^15.3.1"
   },
   "devDependencies": {
@@ -62,7 +63,6 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "winston-daily-rotate-file": "^4.5.0"
+    "eslint-plugin-standard": "^4.0.1"
   }
 }
