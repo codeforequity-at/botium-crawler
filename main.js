@@ -1,7 +1,6 @@
 const path = require('path')
 const debug = require('debug')('botium-crawler-main')
-const config = require('./config-echo-fruit.json')
-// const config = require('./config-directline.json')
+const config = require('./samples/config-echo-fruit.json')
 const Crawler = require('./src/Crawler')
 const ConvoHandler = require('./src/ConvoHandler')
 const { validationErrorHandler } = require('./src/util')
@@ -9,8 +8,6 @@ const { validationErrorHandler } = require('./src/util')
 const ENTRY_POINTS = ['Fruits', 'Apple', 'Pear']
 const IGNORE_STEPS = ['Red']
 const INCOMPREHENSIONS = ['Unknown command']
-// const ENTRY_POINTS = ['help']
-// const IGNORE_BUTTONS = ['card broken:lang', 'invalidCard']
 const OUT_DIR = path.join(__dirname, 'generated')
 const DEPTH = 4
 
