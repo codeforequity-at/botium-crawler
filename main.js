@@ -18,6 +18,7 @@ const main = async () => {
     const convos = await crawler.crawl({
       entryPoints: ENTRY_POINTS,
       depth: DEPTH,
+      hasDefaultWelcomeMessage: false,
       ignoreSteps: IGNORE_STEPS
     })
 
