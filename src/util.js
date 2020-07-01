@@ -5,7 +5,15 @@ const logger = require('./logger')
 const SOURCE_DATA = 'sourceData'
 const BUTTONS = 'buttons'
 
-const getAllValuesByKey = (object, key = BUTTONS, exceptUnder = SOURCE_DATA) => {
+const getAllValuesByKeyFromObjects = (objects, key = BUTTONS, exceptUnder = SOURCE_DATA) => {
+  const values = []
+  for (const object of objects) {
+    values.push(...getAllValuesByKeyFromObject(object, key, exceptUnder))
+  }
+  return values
+}
+
+const getAllValuesByKeyFromObject = (object, key = BUTTONS, exceptUnder = SOURCE_DATA) => {
   const values = []
 
   const objectKeys = _.filter(
@@ -31,6 +39,7 @@ const validationErrorHandler = (message, payload) => {
 }
 
 module.exports = {
-  getAllValuesByKey,
+  getAllValuesByKeyFromObject,
+  getAllValuesByKeyFromObjects,
   validationErrorHandler
 }

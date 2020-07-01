@@ -8,7 +8,7 @@ const handler = async (argv) => {
     output,
     config,
     entryPoints,
-    hasDefaultWelcomeMessage,
+    numberOfWelcomeMessages,
     depth,
     incomprehensions,
     ignoreSteps
@@ -25,7 +25,7 @@ const handler = async (argv) => {
     const crawler = new Crawler({ config: configObject.botium, incomprehensions }, validationErrorHandler)
     const convos = await crawler.crawl({
       entryPoints,
-      hasDefaultWelcomeMessage,
+      numberOfWelcomeMessages,
       depth,
       ignoreSteps
     })
@@ -52,12 +52,10 @@ module.exports = {
       type: 'array',
       default: []
     })
-    yargs.option('hasDefaultWelcomeMessage', {
-      describe: 'Set true if the bot has default welcome message. If the \'entryPoints\' param is empty' +
-        'and this param is true, then the default welcome message will be the entry point. Don\'t let it false' +
-        'if the bot has default welcome message.',
-      type: 'boolean',
-      default: false
+    yargs.option('numberOfWelcomeMessages', {
+      describe: 'The number of welcome messages to wait for by the crawler.',
+      type: 'number',
+      default: 0
     })
     yargs.option('depth', {
       describe: 'The depth of the crawling',

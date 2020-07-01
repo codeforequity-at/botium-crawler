@@ -7,25 +7,40 @@
       "RETRY_USERSAYS_MINTIMEOUT": null,
       "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
       "CONTAINERMODE": "echo",
-      "ECHO_WELCOMEMESSAGE": {
+      "ECHO_WELCOMEMESSAGE": [
+        {
+          "output": {
+            "messageText": "welcome apple",
+            "buttons": [
+              {
+                "text": "Apple"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "welcome0",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
         "output": {
-          "messageText": "This is the default welcome message",
+          "messageText": "welcome pear",
           "buttons": [
-            {
-              "text": "Apple"
-            },
             {
               "text": "Pear"
             }
           ],
           "nlp": {
             "intent": {
-              "name": "default",
+              "name": "welcome1",
               "confidence": 1.0
             }
           }
         }
-      },
+      }
+      ],
       "ECHO_ANSWERS": [
         {
           "input": [

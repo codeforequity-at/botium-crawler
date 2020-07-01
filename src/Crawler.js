@@ -1,9 +1,9 @@
 const debug = require('debug')('botium-crawler-crawler')
 const { BotDriver } = require('botium-core')
-const { getAllValuesByKey } = require('./util')
+const { getAllValuesByKeyFromObjects } = require('./util')
 
-const EMPTY_ENTRY_POINT = '*empty_entry_point*'
-const EMPTY_ENTRY_POINT_NAME = 'EMPTY_ENTRY_POINT'
+const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
+const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
 const DEFAULT_ENTRY_POINTS = ['hello', 'help']
 
 const convos = []
@@ -18,30 +18,30 @@ module.exports = class Crawler {
     this.entryPointId = 0
   }
 
-  async crawl ({ entryPoints = [], hasDefaultWelcomeMessage = false, depth = 5, ignoreSteps = [] }) {
+  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [] }) {
     debug(`A crawler started with '${entryPoints}' entry point and ${depth} depth`)
     if (!Array.isArray(entryPoints)) {
       debug('The entryPoints param has to be an array of strings')
       return convos
     }
 
-    const defaultWelcomeMessage = await this._getDefaultWelcomeMessage(hasDefaultWelcomeMessage)
+    const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
     if (entryPoints.length === 0) {
-      entryPoints = defaultWelcomeMessage || DEFAULT_ENTRY_POINTS
+      entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
     }
 
     this.depth = depth
     this.ignoreSteps = ignoreSteps
 
     await Promise.all(entryPoints.map(async (entryPointText) => {
-      return this._makeConversations(entryPointText, Number(convos.length), hasDefaultWelcomeMessage)
+      return this._makeConversations(entryPointText, Number(convos.length), numberOfWelcomeMessages)
     }))
 
     debug('Crawler finished')
     return convos
   }
 
-  async _makeConversations (entryPointText, entryPointId, hasDefaultWelcomeMessage) {
+  async _makeConversations (entryPointText, entryPointId, numberOfWelcomeMessages) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -52,20 +52,20 @@ module.exports = class Crawler {
     while (!visitedPath[entryPointId].includes(entryPointText)) {
       await this._start()
       const params = {
-        hasDefaultWelcomeMessage,
+        numberOfWelcomeMessages,
         depth: 0,
         path: entryPointText,
         entryPointId,
         tempConvo: {
           header: {
-            name: entryPointText !== EMPTY_ENTRY_POINT
+            name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
               ? `${entryPointId}.${convos[entryPointId].length}_${entryPointText}`
-              : `${entryPointId}.${convos[entryPointId].length}_${EMPTY_ENTRY_POINT_NAME}`
+              : `${entryPointId}.${convos[entryPointId].length}_${WELCOME_MESSAGE_ENTRY_POINT_NAME}`
           },
           conversation: []
         }
       }
-      if (entryPointText !== EMPTY_ENTRY_POINT) {
+      if (entryPointText !== WELCOME_MESSAGE_ENTRY_POINT) {
         params.userMessage = {
           sender: 'me',
           messageText: entryPointText
@@ -76,22 +76,28 @@ module.exports = class Crawler {
     }
   }
 
-  async _makeConversation ({ userMessage, hasDefaultWelcomeMessage, depth, path, entryPointId, tempConvo }) {
+  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, tempConvo }) {
     try {
+      const answers = []
       if (userMessage) {
-        if (depth === 0 && hasDefaultWelcomeMessage) {
-          const welcomeMessage = await this.container.WaitBotSays()
-          tempConvo.conversation.push(welcomeMessage)
+        if (depth === 0 && numberOfWelcomeMessages > 0) {
+          for (let i = 0; i < numberOfWelcomeMessages; i++) {
+            tempConvo.conversation.push(await this.container.WaitBotSays())
+          }
         }
         tempConvo.conversation.push(userMessage)
         await this.container.UserSays(userMessage)
+        answers.push(await this.container.WaitBotSays())
+      } else {
+        for (let i = 0; i < numberOfWelcomeMessages; i++) {
+          answers.push(await this.container.WaitBotSays())
+        }
       }
-      const answer = await this.container.WaitBotSays()
-      tempConvo.conversation.push(answer)
 
-      await this._validateAnswer(answer, userMessage)
+      tempConvo.conversation.push(...answers)
+      await this._validateAnswers(answers, userMessage)
 
-      const buttons = getAllValuesByKey(answer)
+      const buttons = getAllValuesByKeyFromObjects(answers)
       if (depth >= this.depth || (buttons.length === 0 && !visitedPath[entryPointId].includes(path))) {
         debug(`Conversation successfully end on '${path}' path`)
         convos[entryPointId].push(Object.assign({}, tempConvo))
@@ -101,7 +107,8 @@ module.exports = class Crawler {
 
       if (buttons) {
         for (const button of buttons) {
-          if (!visitedPath[entryPointId].includes(path + button.text) &&
+          const buttonPath = button.payload ? path + button.text + JSON.stringify(button.payload) : path + button.text
+          if (!visitedPath[entryPointId].includes(buttonPath) &&
             !(this.ignoreSteps.includes(button.text) || this.ignoreSteps.includes(button.payload))) {
             if (depth === 0) {
               tempConvo.header.name = `${tempConvo.header.name}_${button.text}`
@@ -114,7 +121,7 @@ module.exports = class Crawler {
                 buttons: [button]
               },
               depth: depth + 1,
-              path: button.payload ? path + button.text + JSON.stringify(button.payload) : path + button.text,
+              path: buttonPath,
               entryPointId,
               tempConvo
             }
@@ -171,40 +178,60 @@ module.exports = class Crawler {
     debug('Conversation container stopped.')
   }
 
-  async _validateAnswer (botAnswer, userMessage) {
+  async _validateAnswers (botAnswers, userMessage) {
     // INCOMPREHENSION VALIDATION
     for (const incomprehension of this.incomprehensions) {
-      if (this.compiler.Match(botAnswer, incomprehension)) {
-        debug('User message is failure to understand by the bot', { userMessage, botAnswer })
-        this.callbackValidationError('User message is failure to understand by the bot', { userMessage, botAnswer })
+      for (const botAnswer of botAnswers) {
+        if (this.compiler.Match(botAnswer, incomprehension)) {
+          debug('User message is failure to understand by the bot', {
+            userMessage,
+            botAnswer
+          })
+          this.callbackValidationError('User message is failure to understand by the bot', {
+            userMessage,
+            botAnswer
+          })
+        }
       }
     }
   }
 
-  async _getDefaultWelcomeMessage (hasDefaultWelcomeMessage) {
-    let defaultEntryPoints
+  async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages) {
+    let welcomeMessageEntryPoint
     await this._start()
-    if (hasDefaultWelcomeMessage) {
+    if (numberOfWelcomeMessages > 0) {
+      for (let i = 0; i < numberOfWelcomeMessages; i++) {
+        try {
+          await this.container.WaitBotSays()
+        } catch (e) {
+          throw new Error(`This chat bot has less welcome message than ${numberOfWelcomeMessages}.
+            Please set 'numberOfWelcomeMessages' to the correct number of welcome messages..`)
+        }
+      }
+      let hasCorrectNumberOfWelcomeMessage = false
       try {
         await this.container.WaitBotSays()
       } catch (e) {
-        throw new Error('This chat bot hasn\'t got default welcome message. ' +
-          'Please set \'hasDefaultWelcomeMessage\' to false.')
+        hasCorrectNumberOfWelcomeMessage = true
+        welcomeMessageEntryPoint = [WELCOME_MESSAGE_ENTRY_POINT]
       }
-      defaultEntryPoints = [EMPTY_ENTRY_POINT]
+      if (!hasCorrectNumberOfWelcomeMessage) {
+        throw new Error(`This chat bot has more welcome message than ${numberOfWelcomeMessages}.
+            Please set 'numberOfWelcomeMessages' to the correct number of welcome messages..`)
+      }
     } else {
-      let hasDefault = true
+      let hasDefaultWelcomeMessage = true
       try {
         await this.container.WaitBotSays()
       } catch (e) {
-        hasDefault = false
+        hasDefaultWelcomeMessage = false
       }
-      if (hasDefault) {
-        throw new Error('This chat bot has got default welcome message. ' +
-          'Please set \'hasDefaultWelcomeMessage\' to true.')
+      if (hasDefaultWelcomeMessage) {
+        throw new Error(`This chat bot has more welcome message than ${numberOfWelcomeMessages}.
+            Please set 'numberOfWelcomeMessages' to the correct number of welcome messages..`)
       }
     }
     await this._stop()
-    return defaultEntryPoints
+    return welcomeMessageEntryPoint
   }
 }
