@@ -10,7 +10,9 @@
   "scripts": {
     "start": "node main.js",
     "start:dev": "DEBUG=botium-crawler* node main.js",
-    "start:dev:verbose": "DEBUG=botium-* node main.js"
+    "start:dev:verbose": "DEBUG=botium-* node main.js",
+    "lint": "eslint \"./src/**/*.js\" main.js crawlCommand.js",
+    "lint:fix": "eslint --fix \"./src/**/*.js\" main.js crawlCommand.js"
   },
   "repository": {
     "type": "git",
@@ -44,7 +46,7 @@
     "botium-connector-teneo": "https://github.com/codeforequity-at/botium-connector-teneo.git#master",
     "botium-connector-ubitec": "https://github.com/codeforequity-at/botium-connector-ubitec.git#master",
     "botium-connector-watson": "https://github.com/codeforequity-at/botium-connector-watson.git#master",
-    "botium-connector-webdriverio": "https://github.com/codeforequity-at/botium-connector-webdriverio.git#master",
+    "botium-connector-webdriverio": "https://github.com/codeforequity-at/botium-connector-webdriverio.git#feature/BOT-1419-Botium-crawler",
     "botium-connector-websocket": "https://github.com/codeforequity-at/botium-connector-websocket.git#master",
     "botium-connector-wechat": "https://github.com/codeforequity-at/botium-connector-wechat.git#master",
     "botium-connector-whatsapp": "https://github.com/codeforequity-at/botium-connector-whatsapp.git#master",
