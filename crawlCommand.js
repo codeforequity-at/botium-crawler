@@ -11,7 +11,8 @@ const handler = async (argv) => {
     numberOfWelcomeMessages,
     depth,
     incomprehensions,
-    ignoreSteps
+    ignoreSteps,
+    mergeUtterances
   } = argv
 
   const configObject = JSON.parse(fs.readFileSync(config, 'utf8'))
@@ -31,7 +32,7 @@ const handler = async (argv) => {
     })
 
     console.log('Saving testcases...')
-    await new ConvoHandler(crawler.compiler).persistConvosInFiles(convos, output)
+    await new ConvoHandler(crawler.compiler).persistConvosInFiles({ convos, output, mergeUtterances })
     console.log('Crawler finished successfully')
   } catch (e) {
     console.error('Botium-Crawler failed: ', e)
@@ -78,6 +79,11 @@ module.exports = {
       describe: 'Output directory',
       type: 'string',
       default: './generated'
+    })
+    yargs.option('mergeUtterances', {
+      describe: 'Merge the same utterances into one file',
+      type: 'boolean',
+      default: false
     })
   },
   handler

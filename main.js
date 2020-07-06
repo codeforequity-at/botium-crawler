@@ -18,11 +18,11 @@ const main = async () => {
     const convos = await crawler.crawl({
       entryPoints: ENTRY_POINTS,
       depth: DEPTH,
-      numberOfWelcomeMessages: 2,
+      numberOfWelcomeMessages: 0,
       ignoreSteps: IGNORE_STEPS
     })
 
-    await new ConvoHandler(crawler.compiler).persistConvosInFiles(convos, OUT_DIR)
+    await new ConvoHandler(crawler.compiler).persistConvosInFiles({ convos, output: OUT_DIR, mergeUtterances: true })
   } catch (e) {
     debug('Botium-Crawler failed: ', e)
   }
