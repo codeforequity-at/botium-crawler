@@ -1,0 +1,306 @@
+{
+  "botium": {
+    "Capabilities": {
+      "RETRY_USERSAYS_ONERROR_REGEXP": [],
+      "RETRY_USERSAYS_NUMRETRIES": null,
+      "RETRY_USERSAYS_FACTOR": null,
+      "RETRY_USERSAYS_MINTIMEOUT": null,
+      "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
+      "CONTAINERMODE": "echo",
+      "ECHO_ANSWERS": [
+        {
+          "input": [
+            "Fruits and vegetables"
+          ],
+          "output": {
+            "messageText": "Fruits, vegetables or something else?",
+            "buttons": [
+              {
+                "text": "Fruits"
+              },
+              {
+                "text": "Other"
+              },
+              {
+                "text": "Vegetables"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Fruits_Or_Vegs",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Fruits"
+          ],
+          "output": {
+            "messageText": "What kind of fruits do you want?",
+            "nlp": {
+              "intent": {
+                "name": "Fruits",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Vegetables"
+          ],
+          "output": {
+            "messageText": "What kind of vegetables do you want?",
+            "nlp": {
+              "intent": {
+                "name": "Vegetables",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Other"
+          ],
+          "output": {
+            "messageText": "This is the other way",
+            "buttons": [
+              {
+                "text": "Something else"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Other",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Something else"
+          ],
+          "output": {
+            "messageText": "You choose the other one",
+            "nlp": {
+              "intent": {
+                "name": "Other_one",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Apple"
+          ],
+          "output": {
+            "messageText": "Apple colors",
+            "buttons": [
+              {
+                "text": "Red"
+              },
+              {
+                "text": "Green"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Apple",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Pear"
+          ],
+          "output": {
+            "messageText": "Pear colors",
+            "buttons": [
+              {
+                "text": "Green"
+              },
+              {
+                "text": "Yellow"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Pear",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Red"
+          ],
+          "output": {
+            "messageText": "Your red apple",
+            "nlp": {
+              "intent": {
+                "name": "Red",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Yellow"
+          ],
+          "output": {
+            "messageText": "Yellow pear",
+            "nlp": {
+              "intent": {
+                "name": "Yellow",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Green"
+          ],
+          "output": {
+            "messageText": "Your  green apple or pear",
+            "buttons": [
+              {
+                "text": "Dummy button"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Green",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Dummy button"
+          ],
+          "output": {
+            "messageText": "Unknown command",
+            "nlp": {
+              "intent": {
+                "name": "Dummy button",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Pepper"
+          ],
+          "output": {
+            "messageText": "Choose one",
+            "buttons": [
+              {
+                "text": "Hot pepper"
+              },
+              {
+                "text": "Normal pepper"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Pepper",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Tomato"
+          ],
+          "output": {
+            "messageText": "Choose one",
+            "buttons": [
+              {
+                "text": "Cherry tomato"
+              },
+              {
+                "text": "Normal tomato"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Tomato",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Hot pepper"
+          ],
+          "output": {
+            "messageText": "You choose hot pepper",
+            "nlp": {
+              "intent": {
+                "name": "Hot_pepper",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Normal pepper"
+          ],
+          "output": {
+            "messageText": "You choose normal pepper",
+            "nlp": {
+              "intent": {
+                "name": "Normal_pepper",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Cherry tomato"
+          ],
+          "output": {
+            "messageText": "You choose cherry tomato",
+            "nlp": {
+              "intent": {
+                "name": "Cherry_tomato",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Normal tomato"
+          ],
+          "output": {
+            "messageText": "You choose normal tomato",
+            "nlp": {
+              "intent": {
+                "name": "Normal_tomato",
+                "confidence": 0.8
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Envs": {}
+  }
+}

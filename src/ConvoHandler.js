@@ -113,7 +113,7 @@ module.exports = class ConvoHandler {
       if (mergedUtt.occurances.length > 1) {
         const indexOfEol = mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
         const start = indexOfEol + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL].length
-        mergedUtt.name = `${counter++}_${slugify(mergedUtt.script.substring(start, start + 20)).toUpperCase()}`
+        mergedUtt.name = `${counter++}_${slugify(mergedUtt.script.substring(start, start + 32)).toUpperCase()}`
         mergedUtt.script = mergedUtt.script.replace(mergedUtt.script.substring(0, indexOfEol), mergedUtt.name)
       }
     }
