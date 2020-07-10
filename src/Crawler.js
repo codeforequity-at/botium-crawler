@@ -16,7 +16,6 @@ module.exports = class Crawler {
     this.incomprehensions = incomprehensions
     this.callbackValidationError = callbackValidationError
     this.callbackAskUser = callbackAskUser
-    this.entryPointId = 0
     this.convos = []
     this.visitedPath = []
     this.pathCounter = {}
@@ -82,7 +81,7 @@ module.exports = class Crawler {
         await this._start(entryPointId)
         const params = {
           numberOfWelcomeMessages,
-          depth: 0,
+          depth: 1,
           path: entryPointText,
           entryPointId,
           tempConvo: {
@@ -110,7 +109,7 @@ module.exports = class Crawler {
     try {
       const botAnswers = []
       if (userMessage) {
-        if (depth === 0 && numberOfWelcomeMessages > 0) {
+        if (depth === 1 && numberOfWelcomeMessages > 0) {
           for (let i = 0; i < numberOfWelcomeMessages; i++) {
             tempConvo.conversation.push(await this.containers[entryPointId].WaitBotSays())
           }
@@ -161,7 +160,7 @@ module.exports = class Crawler {
 
         if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked &&
             !(this.ignoreSteps.includes(request.text) || this.ignoreSteps.includes(request.payload))) {
-          if (depth === 0) {
+          if (depth === 1) {
             tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
           }
 
@@ -238,7 +237,7 @@ module.exports = class Crawler {
 
   _finishConversation (tempConvo, entryPointId, path) {
     let partialPath = ''
-    let prefix = '' + entryPointId
+    let prefix = `${entryPointId + 1}`
     const pathElements = path.split(PATH_SEPARATOR)
 
     for (let i = 0; i < pathElements.length; i++) {
@@ -248,7 +247,7 @@ module.exports = class Crawler {
       } else {
         partialPath = partialPath + PATH_SEPARATOR + pathElement
         if (!this.pathCounter[partialPath]) {
-          this.pathCounter[partialPath] = 0
+          this.pathCounter[partialPath] = 1
         }
         prefix = `${prefix}.${this.pathCounter[partialPath]}`
         this.pathCounter[partialPath]++
