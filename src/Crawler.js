@@ -6,6 +6,7 @@ const { getAllValuesByKeyFromObjects } = require('./util')
 const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
 const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
 const DEFAULT_ENTRY_POINTS = ['hello', 'help']
+const PATH_SEPARATOR = ';'
 
 module.exports = class Crawler {
   constructor ({ config, incomprehensions }, callbackValidationError, callbackAskUser) {
@@ -18,6 +19,7 @@ module.exports = class Crawler {
     this.entryPointId = 0
     this.convos = []
     this.visitedPath = []
+    this.pathCounter = {}
     this.stuckConversations = []
     this.userRequests = []
   }
@@ -148,7 +150,9 @@ module.exports = class Crawler {
 
       let hasStuckedRequest = false
       for (const request of requests) {
-        const requestPath = request.payload ? path + request.text + JSON.stringify(request.payload) : path + request.text
+        const requestPath = request.payload
+          ? path + PATH_SEPARATOR + request.text + JSON.stringify(request.payload)
+          : path + PATH_SEPARATOR + request.text
         const isRequestPathStucked = _.some(this.stuckConversations[entryPointId],
           stuckConversation => stuckConversation.path === requestPath)
         if (isRequestPathStucked) {
@@ -233,7 +237,24 @@ module.exports = class Crawler {
   }
 
   _finishConversation (tempConvo, entryPointId, path) {
-    tempConvo.header.name = `${entryPointId}.${this.convos[entryPointId].length}_${tempConvo.header.name}`
+    let partialPath = ''
+    let prefix = '' + entryPointId
+    const pathElements = path.split(PATH_SEPARATOR)
+
+    for (let i = 0; i < pathElements.length; i++) {
+      const pathElement = pathElements[i]
+      if (i === 0) {
+        partialPath = pathElement
+      } else {
+        partialPath = partialPath + PATH_SEPARATOR + pathElement
+        if (!this.pathCounter[partialPath]) {
+          this.pathCounter[partialPath] = 1
+        }
+        prefix = `${prefix}.${this.pathCounter[partialPath]}`
+        this.pathCounter[partialPath]++
+      }
+    }
+    tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
   }

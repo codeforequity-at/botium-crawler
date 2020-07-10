@@ -22,6 +22,8 @@ module.exports = class ConvoHandler {
     }
     if (!fs.existsSync(output)) {
       fs.mkdirSync(output)
+    } else if (fs.readdirSync(output).length !== 0) {
+      throw new Error(`The output path '${output}' has to be empty`)
     }
 
     scriptObjects.forEach((scriptObject) => {
