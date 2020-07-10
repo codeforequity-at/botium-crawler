@@ -248,7 +248,7 @@ module.exports = class Crawler {
       } else {
         partialPath = partialPath + PATH_SEPARATOR + pathElement
         if (!this.pathCounter[partialPath]) {
-          this.pathCounter[partialPath] = 1
+          this.pathCounter[partialPath] = 0
         }
         prefix = `${prefix}.${this.pathCounter[partialPath]}`
         this.pathCounter[partialPath]++
