@@ -267,10 +267,12 @@ module.exports = class Crawler {
             userMessage,
             botAnswer
           })
-          this.callbackValidationError('User message is failure to understand by the bot', {
-            userMessage,
-            botAnswer
-          })
+          if (this.callbackValidationError) {
+            this.callbackValidationError('User message is failure to understand by the bot', {
+              userMessage,
+              botAnswer
+            })
+          }
         }
       }
     }

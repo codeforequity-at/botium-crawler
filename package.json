@@ -8,11 +8,8 @@
     "botium-crawler-cli": "./bin/cli.js"
   },
   "scripts": {
-    "start": "node main.js",
-    "start:dev": "DEBUG=botium-crawler* node main.js",
-    "start:dev:verbose": "DEBUG=botium-* node main.js",
-    "lint": "eslint \"./src/**/*.js\" main.js crawlCommand.js",
-    "lint:fix": "eslint --fix \"./src/**/*.js\" main.js crawlCommand.js"
+    "lint": "eslint \"./src/**/*.js\" index.js crawler-run.js edit-feedbacks.js",
+    "lint:fix": "eslint --fix \"./src/**/*.js\" index.js crawler-run.js edit-feedbacks.js"
   },
   "repository": {
     "type": "git",

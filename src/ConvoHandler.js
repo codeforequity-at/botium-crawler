@@ -22,7 +22,7 @@ module.exports = class ConvoHandler {
     }
     if (!fs.existsSync(output)) {
       fs.mkdirSync(output)
-    } else if (fs.readdirSync(output).length !== 0) {
+    } else if (fs.readdirSync(output).length > 0) {
       throw new Error(`The output path '${output}' has to be empty`)
     }
 
@@ -49,7 +49,6 @@ module.exports = class ConvoHandler {
 
   async _decompileConvos (convos) {
     debug('Decompile convos')
-    console.log(convos)
     const flatConvos = _.flatten(convos)
     return Promise.all(
       flatConvos.map(async (convo) => {
