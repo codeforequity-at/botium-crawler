@@ -5,7 +5,12 @@ const Crawler = require('./src/Crawler')
 const ConvoHandler = require('./src/ConvoHandler')
 const { validationErrorHandler } = require('./src/util')
 
+let recycleUserFeedbacks
+let userFeedbacksPath
+
 const handler = async (argv) => {
+  recycleUserFeedbacks = argv.recycleUserFeedbacks
+  userFeedbacksPath = argv.userFeedbacksPath
   const {
     output,
     config,
@@ -25,9 +30,12 @@ const handler = async (argv) => {
 
   try {
     console.log('Crawler started...')
+    if (fs.existsSync(output) && fs.readdirSync(output).length > 0) {
+      throw new Error(`The output path '${output}' has to be empty`)
+    }
     const crawler = new Crawler({
       config: configObject.botium, incomprehensions
-    }, validationErrorHandler, askUserHandler)
+    }, validationErrorHandler, _askUserHandler)
     const convos = await crawler.crawl({
       entryPoints,
       numberOfWelcomeMessages,
@@ -43,29 +51,55 @@ const handler = async (argv) => {
   }
 }
 
-const askUserHandler = async (stuckConversations, crawler) => {
+const _askUserHandler = async (stuckConversations, crawler) => {
+  const userFeedbacks = []
+  let userFeedbackChanged = false
+  if (recycleUserFeedbacks && fs.existsSync(userFeedbacksPath)) {
+    userFeedbacks.push(...JSON.parse(fs.readFileSync(userFeedbacksPath, 'utf8')))
+  }
   const userResponses = stuckConversations.map(stuckConversation => ({ path: stuckConversation.path }))
   for (const stuckConversation of stuckConversations) {
-    const script = crawler.compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
-    console.log(`\n---------------------------------------\n${script}
-    \n---------------------------------------\n`)
-    const contiueAnswer = readlineSync.question('This path is stucked before reaching depth. \n' +
-    'Would you like to continue with your own answers?  [yes, no, no all]: ', { limit: ['yes', 'no', 'no all'] })
-
-    if (contiueAnswer === 'no all') {
-      break
-    }
-
-    if (contiueAnswer === 'yes') {
-      const userResponse = _.find(userResponses, userResponse => userResponse.path === stuckConversation.path)
-      userResponse.texts = []
-      let additionalAnswer = true
-      let i = 1
-      while (additionalAnswer) {
-        userResponse.texts.push(readlineSync.question(`Enter your ${i++}. answer: `))
-        additionalAnswer = readlineSync.keyInYN('Do you want to add additional answers?')
+    const userResponse = _.find(userResponses, userResponse => userResponse.path === stuckConversation.path)
+    userResponse.texts = []
+    if (recycleUserFeedbacks && userFeedbacks.length > 0) {
+      const userFeedbackToReuse = _.find(userFeedbacks,
+        userFeedback => userFeedback.path === stuckConversation.path)
+      if (userFeedbackToReuse) {
+        userResponse.texts.push(...userFeedbackToReuse.answers)
       }
     }
+
+    if (userResponse.texts.length === 0) {
+      const script = crawler.compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
+      console.log(`\n---------------------------------------\n${script}
+    \n---------------------------------------\n`)
+      const contiueAnswer = readlineSync.question('This path is stucked before reaching depth. \n' +
+    'Would you like to continue with your own answers?  [yes, no, no all]: ', { limit: ['yes', 'no', 'no all'] })
+
+      if (contiueAnswer === 'no all') {
+        break
+      }
+
+      if (contiueAnswer === 'yes') {
+        let additionalAnswer = true
+        let i = 1
+        while (additionalAnswer) {
+          userResponse.texts.push(readlineSync.question(`Enter your ${i++}. answer: `))
+          additionalAnswer = readlineSync.keyInYN('Do you want to add additional answers?')
+        }
+        if (recycleUserFeedbacks) {
+          userFeedbacks.push({
+            path: userResponse.path,
+            script,
+            answers: userResponse.texts
+          })
+          userFeedbackChanged = true
+        }
+      }
+    }
+  }
+  if (recycleUserFeedbacks && userFeedbackChanged) {
+    fs.writeFileSync(userFeedbacksPath, JSON.stringify(userFeedbacks), 'utf8')
   }
   return userResponses
 }
@@ -115,6 +149,16 @@ module.exports = {
       describe: 'Merge the same utterances into one file',
       type: 'boolean',
       default: true
+    })
+    yargs.option('recycleUserFeedbacks', {
+      describe: 'Reuse and store user answers into a json file give in \'userFeedbacksPath\' param',
+      type: 'boolean',
+      default: true
+    })
+    yargs.option('userFeedbacksPath', {
+      describe: 'Define the path of a json file, the user feedback can be read from and store into.',
+      type: 'string',
+      default: './userFeedbacks.json'
     })
   },
   handler
