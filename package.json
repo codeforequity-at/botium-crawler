@@ -25,7 +25,6 @@
   },
   "homepage": "https://www.botium.ai",
   "dependencies": {
-    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
     "botium-connector-alexa-avs": "https://github.com/codeforequity-at/botium-connector-alexa-avs.git#master",
     "botium-connector-alexa-smapi": "https://github.com/codeforequity-at/botium-connector-alexa-smapi.git#master",
     "botium-connector-botkit": "https://github.com/codeforequity-at/botium-connector-botkit.git#master",
@@ -33,6 +32,7 @@
     "botium-connector-botpress": "https://github.com/codeforequity-at/botium-connector-botpress.git#master",
     "botium-connector-dialogflow": "https://github.com/codeforequity-at/botium-connector-dialogflow.git#master",
     "botium-connector-directline3": "https://github.com/codeforequity-at/botium-connector-directline3.git#master",
+    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
     "botium-connector-fbwebhook": "https://github.com/codeforequity-at/botium-connector-fbwebhook.git#master",
     "botium-connector-google-assistant": "https://github.com/codeforequity-at/botium-connector-google-assistant.git#master",
     "botium-connector-holmes": "https://github.com/codeforequity-at/botium-connector-holmes.git#master",
@@ -55,6 +55,7 @@
     "debug": "^4.1.1",
     "flat": "^5.0.0",
     "lodash": "^4.17.15",
+    "readline-sync": "^1.4.10",
     "winston": "^3.3.2",
     "winston-daily-rotate-file": "^4.5.0",
     "yargs": "^15.3.1"

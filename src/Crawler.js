@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const debug = require('debug')('botium-crawler-crawler')
 const { BotDriver } = require('botium-core')
 const { getAllValuesByKeyFromObjects } = require('./util')
@@ -5,17 +6,21 @@ const { getAllValuesByKeyFromObjects } = require('./util')
 const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
 const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
 const DEFAULT_ENTRY_POINTS = ['hello', 'help']
+const PATH_SEPARATOR = ';'
 
 module.exports = class Crawler {
-  constructor ({ config, incomprehensions }, callbackValidationError) {
+  constructor ({ config, incomprehensions }, callbackValidationError, callbackAskUser) {
     this.driver = new BotDriver(config && config.Capabilities, config && config.Sources, config && config.Envs)
     this.compiler = this.driver.BuildCompiler()
     this.containers = {}
     this.incomprehensions = incomprehensions
     this.callbackValidationError = callbackValidationError
-    this.entryPointId = 0
+    this.callbackAskUser = callbackAskUser
     this.convos = []
     this.visitedPath = []
+    this.pathCounter = {}
+    this.stuckConversations = []
+    this.userRequests = []
   }
 
   async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [] }) {
@@ -48,89 +53,141 @@ module.exports = class Crawler {
     }
     this.convos[entryPointId] = []
     this.visitedPath[entryPointId] = []
+    this.stuckConversations[entryPointId] = []
+    this.userRequests[entryPointId] = []
+    let firstTry = true
 
-    while (!this.visitedPath[entryPointId].includes(entryPointText)) {
-      await this._start(entryPointId)
-      const params = {
-        numberOfWelcomeMessages,
-        depth: 0,
-        path: entryPointText,
-        entryPointId,
-        tempConvo: {
-          header: {
-            name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
-              ? `${entryPointId}.${this.convos[entryPointId].length}_${entryPointText}`
-              : `${entryPointId}.${this.convos[entryPointId].length}_${WELCOME_MESSAGE_ENTRY_POINT_NAME}`
-          },
-          conversation: []
+    while (firstTry || this.stuckConversations[entryPointId].length > 0) {
+      firstTry = false
+      if (this.callbackAskUser && this.stuckConversations[entryPointId].length > 0) {
+        _.remove(this.stuckConversations[entryPointId], stuckConversation => !stuckConversation.convo)
+        const userResponses = await this.callbackAskUser(this.stuckConversations[entryPointId], this)
+
+        for (const userResponse of userResponses) {
+          if (userResponse.texts && userResponse.texts.length > 0) {
+            this.userRequests[entryPointId].push(userResponse)
+          } else {
+            const stuckConversation = _.find(this.stuckConversations[entryPointId],
+              stuckConversation => stuckConversation.path === userResponse.path)
+            this._finishConversation(stuckConversation.convo, entryPointId, userResponse.path)
+            debug(`Conversation successfully ended by user on '${userResponse.path}' path`)
+          }
         }
+        this.stuckConversations[entryPointId] = []
       }
-      if (entryPointText !== WELCOME_MESSAGE_ENTRY_POINT) {
-        params.userMessage = {
-          sender: 'me',
-          messageText: entryPointText
+
+      while (!this.visitedPath[entryPointId].includes(entryPointText) &&
+      !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === entryPointText)) {
+        await this._start(entryPointId)
+        const params = {
+          numberOfWelcomeMessages,
+          depth: 1,
+          path: entryPointText,
+          entryPointId,
+          tempConvo: {
+            header: {
+              name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
+                ? entryPointText.substring(0, 16)
+                : WELCOME_MESSAGE_ENTRY_POINT_NAME
+            },
+            conversation: []
+          }
         }
+        if (entryPointText !== WELCOME_MESSAGE_ENTRY_POINT) {
+          params.userMessage = {
+            sender: 'me',
+            messageText: entryPointText
+          }
+        }
+        await this._makeConversation(params)
+        await this._stop(entryPointId)
       }
-      await this._makeConversation(params)
-      await this._stop(entryPointId)
     }
   }
 
   async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, tempConvo }) {
     try {
-      const answers = []
+      const botAnswers = []
       if (userMessage) {
-        if (depth === 0 && numberOfWelcomeMessages > 0) {
+        if (depth === 1 && numberOfWelcomeMessages > 0) {
           for (let i = 0; i < numberOfWelcomeMessages; i++) {
             tempConvo.conversation.push(await this.containers[entryPointId].WaitBotSays())
           }
         }
         tempConvo.conversation.push(userMessage)
         await this.containers[entryPointId].UserSays(userMessage)
-        answers.push(await this.containers[entryPointId].WaitBotSays())
+        botAnswers.push(await this.containers[entryPointId].WaitBotSays())
       } else {
         for (let i = 0; i < numberOfWelcomeMessages; i++) {
-          answers.push(await this.containers[entryPointId].WaitBotSays())
+          botAnswers.push(await this.containers[entryPointId].WaitBotSays())
         }
       }
 
-      tempConvo.conversation.push(...answers)
-      await this._validateAnswers(answers, userMessage)
+      tempConvo.conversation.push(...botAnswers)
+      await this._validateAnswers(botAnswers, userMessage)
 
-      const buttons = getAllValuesByKeyFromObjects(answers)
-      if (depth >= this.depth || (buttons.length === 0 && !this.visitedPath[entryPointId].includes(path))) {
-        debug(`Conversation successfully end on '${path}' path`)
-        this.convos[entryPointId].push(Object.assign({}, tempConvo))
-        this.visitedPath[entryPointId].push(path)
+      if (depth >= this.depth) {
+        this._finishConversation(tempConvo, entryPointId, path)
+        debug(`Conversation successfully end on '${path}' path with reaching ${depth} depth`)
         return
       }
 
-      if (buttons) {
-        for (const button of buttons) {
-          const buttonPath = button.payload ? path + button.text + JSON.stringify(button.payload) : path + button.text
-          if (!this.visitedPath[entryPointId].includes(buttonPath) &&
-            !(this.ignoreSteps.includes(button.text) || this.ignoreSteps.includes(button.payload))) {
-            if (depth === 0) {
-              tempConvo.header.name = `${tempConvo.header.name}_${button.text}`
-            }
+      const requests = await this._getRequests(botAnswers, path, entryPointId)
+      if (requests.length === 0 && !this.visitedPath[entryPointId].includes(path)) {
+        if (this.callbackAskUser) {
+          this.stuckConversations[entryPointId].push({
+            path,
+            convo: Object.assign({}, tempConvo)
+          })
+          debug(`Stuck conversation on '${path}' path`)
+        } else {
+          this._finishConversation(tempConvo, entryPointId, path)
+          debug(`Conversation successfully end on '${path}' path with finding a leaf`)
+        }
+        return
+      }
 
-            const params = {
-              userMessage: {
-                sender: 'me',
-                messageText: button.text,
-                buttons: [button]
-              },
-              depth: depth + 1,
-              path: buttonPath,
-              entryPointId,
-              tempConvo
-            }
-            await this._makeConversation(params)
-
-            return
-          }
+      let hasStuckedRequest = false
+      for (const request of requests) {
+        const requestPath = request.payload
+          ? path + PATH_SEPARATOR + request.text + JSON.stringify(request.payload)
+          : path + PATH_SEPARATOR + request.text
+        const isRequestPathStucked = _.some(this.stuckConversations[entryPointId],
+          stuckConversation => stuckConversation.path === requestPath)
+        if (isRequestPathStucked) {
+          hasStuckedRequest = true
         }
 
+        if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked &&
+            !(this.ignoreSteps.includes(request.text) || this.ignoreSteps.includes(request.payload))) {
+          if (depth === 1) {
+            tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
+          }
+
+          const userMessage = {
+            sender: 'me',
+            messageText: request.text
+          }
+          if (!request.isUserRequest) {
+            userMessage.buttons = [request]
+          }
+
+          const params = {
+            userMessage,
+            depth: depth + 1,
+            path: requestPath,
+            entryPointId,
+            tempConvo
+          }
+          await this._makeConversation(params)
+
+          return
+        }
+      }
+
+      if (hasStuckedRequest) {
+        this.stuckConversations[entryPointId].push({ path })
+      } else {
         this.visitedPath[entryPointId].push(path)
       }
     } catch (e) {
@@ -176,6 +233,29 @@ module.exports = class Crawler {
       }
     }
     debug('Conversation container stopped.')
+  }
+
+  _finishConversation (tempConvo, entryPointId, path) {
+    let partialPath = ''
+    let prefix = `${entryPointId + 1}`
+    const pathElements = path.split(PATH_SEPARATOR)
+
+    for (let i = 0; i < pathElements.length; i++) {
+      const pathElement = pathElements[i]
+      if (i === 0) {
+        partialPath = pathElement
+      } else {
+        partialPath = partialPath + PATH_SEPARATOR + pathElement
+        if (!this.pathCounter[partialPath]) {
+          this.pathCounter[partialPath] = 1
+        }
+        prefix = `${prefix}.${this.pathCounter[partialPath]}`
+        this.pathCounter[partialPath]++
+      }
+    }
+    tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
+    this.convos[entryPointId].push(Object.assign({}, tempConvo))
+    this.visitedPath[entryPointId].push(path)
   }
 
   async _validateAnswers (botAnswers, userMessage) {
@@ -233,5 +313,17 @@ module.exports = class Crawler {
     }
     await this._stop(entryPointId)
     return welcomeMessageEntryPoint
+  }
+
+  async _getRequests (botAnswers, path, entryPointId) {
+    const requests = []
+    requests.push(...(await getAllValuesByKeyFromObjects(botAnswers)))
+    if (requests.length === 0) {
+      const userRequest = _.find(this.userRequests[entryPointId], userRequest => userRequest.path === path)
+      if (userRequest) {
+        requests.push(...userRequest.texts.map(text => ({ text, isUserRequest: true })))
+      }
+    }
+    return requests
   }
 }

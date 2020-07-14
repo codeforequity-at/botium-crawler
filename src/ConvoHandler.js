@@ -22,6 +22,8 @@ module.exports = class ConvoHandler {
     }
     if (!fs.existsSync(output)) {
       fs.mkdirSync(output)
+    } else if (fs.readdirSync(output).length !== 0) {
+      throw new Error(`The output path '${output}' has to be empty`)
     }
 
     scriptObjects.forEach((scriptObject) => {
@@ -47,6 +49,7 @@ module.exports = class ConvoHandler {
 
   async _decompileConvos (convos) {
     debug('Decompile convos')
+    console.log(convos)
     const flatConvos = _.flatten(convos)
     return Promise.all(
       flatConvos.map(async (convo) => {
@@ -67,7 +70,7 @@ module.exports = class ConvoHandler {
           statistics.multirow++
         } else {
           if (step.sender === 'bot') {
-            const utteranceName = slugify(`${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
+            const utteranceName = slugify(`UTT_${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
             const utteranceValue = step.messageText
             step.messageText = utteranceName
 
@@ -102,7 +105,7 @@ module.exports = class ConvoHandler {
         otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
     )
 
-    let counter = 0
+    let counter = 1
     for (const mergedUtt of mergedUtterances) {
       mergedUtt.occurances = _.filter(utterances,
         (utt) =>
@@ -113,7 +116,7 @@ module.exports = class ConvoHandler {
       if (mergedUtt.occurances.length > 1) {
         const indexOfEol = mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
         const start = indexOfEol + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL].length
-        mergedUtt.name = `${counter++}_${slugify(mergedUtt.script.substring(start, start + 20)).toUpperCase()}`
+        mergedUtt.name = `UTT_M${counter++}_${slugify(mergedUtt.script.substring(start, start + 32)).toUpperCase()}`
         mergedUtt.script = mergedUtt.script.replace(mergedUtt.script.substring(0, indexOfEol), mergedUtt.name)
       }
     }

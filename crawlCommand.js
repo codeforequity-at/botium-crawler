@@ -1,4 +1,6 @@
 const fs = require('fs')
+const _ = require('lodash')
+const readlineSync = require('readline-sync')
 const Crawler = require('./src/Crawler')
 const ConvoHandler = require('./src/ConvoHandler')
 const { validationErrorHandler } = require('./src/util')
@@ -23,7 +25,9 @@ const handler = async (argv) => {
 
   try {
     console.log('Crawler started...')
-    const crawler = new Crawler({ config: configObject.botium, incomprehensions }, validationErrorHandler)
+    const crawler = new Crawler({
+      config: configObject.botium, incomprehensions
+    }, validationErrorHandler, askUserHandler)
     const convos = await crawler.crawl({
       entryPoints,
       numberOfWelcomeMessages,
@@ -37,6 +41,33 @@ const handler = async (argv) => {
   } catch (e) {
     console.error('Botium-Crawler failed: ', e)
   }
+}
+
+const askUserHandler = async (stuckConversations, crawler) => {
+  const userResponses = stuckConversations.map(stuckConversation => ({ path: stuckConversation.path }))
+  for (const stuckConversation of stuckConversations) {
+    const script = crawler.compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
+    console.log(`\n---------------------------------------\n${script}
+    \n---------------------------------------\n`)
+    const contiueAnswer = readlineSync.question('This path is stucked before reaching depth. \n' +
+    'Would you like to continue with your own answers?  [yes, no, no all]: ', { limit: ['yes', 'no', 'no all'] })
+
+    if (contiueAnswer === 'no all') {
+      break
+    }
+
+    if (contiueAnswer === 'yes') {
+      const userResponse = _.find(userResponses, userResponse => userResponse.path === stuckConversation.path)
+      userResponse.texts = []
+      let additionalAnswer = true
+      let i = 1
+      while (additionalAnswer) {
+        userResponse.texts.push(readlineSync.question(`Enter your ${i++}. answer: `))
+        additionalAnswer = readlineSync.keyInYN('Do you want to add additional answers?')
+      }
+    }
+  }
+  return userResponses
 }
 
 module.exports = {
@@ -83,7 +114,7 @@ module.exports = {
     yargs.option('mergeUtterances', {
       describe: 'Merge the same utterances into one file',
       type: 'boolean',
-      default: false
+      default: true
     })
   },
   handler
