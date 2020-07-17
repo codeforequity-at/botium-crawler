@@ -15,7 +15,6 @@ module.exports = class Crawler {
     } else {
       this.driver = new BotDriver(config && config.Capabilities, config && config.Sources, config && config.Envs)
     }
-    this.compiler = this.driver.BuildCompiler()
     this.containers = {}
     this.callbackValidatior = callbackValidatior
     this.callbackAskUser = callbackAskUser
@@ -64,7 +63,7 @@ module.exports = class Crawler {
       firstTry = false
       if (this.callbackAskUser && this.stuckConversations[entryPointId].length > 0) {
         _.remove(this.stuckConversations[entryPointId], stuckConversation => !stuckConversation.convo)
-        const userResponses = await this.callbackAskUser(this.stuckConversations[entryPointId], this)
+        const userResponses = await this.callbackAskUser(this.stuckConversations[entryPointId])
 
         for (const userResponse of userResponses) {
           if (userResponse.texts && userResponse.texts.length > 0) {

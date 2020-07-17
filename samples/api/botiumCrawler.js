@@ -2,6 +2,8 @@ const { askUserFeedbackOnConsole, getBotiumDriver } = require('../../src/util')
 const Crawler = require('../../src/Crawler')
 const ConvoHandler = require('../../src/ConvoHandler')
 
+let compiler
+
 const run = async () => {
   console.log('Botium-Crawler started')
   try {
@@ -9,19 +11,20 @@ const run = async () => {
     if (!driver) {
       throw new Error('Botium driver can not be created.')
     }
+    compiler = driver.BuildCompiler()
 
     const crawler = new Crawler({ driver }, _askUserHandler)
     const convos = await crawler.crawl({ entryPoints: ['buttons'] })
 
-    const decompiledConvos = await new ConvoHandler(crawler.compiler).decompileConvos({ convos })
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos })
     _logDecompiledConvosOnColsole(decompiledConvos)
   } catch (e) {
     console.log('Botium-Crawler failed: ', e)
   }
 }
 
-const _askUserHandler = async (stuckConversations, crawler) => {
-  return askUserFeedbackOnConsole(stuckConversations, crawler, false)
+const _askUserHandler = async (stuckConversations) => {
+  return askUserFeedbackOnConsole(stuckConversations, compiler, false)
 }
 
 const _logDecompiledConvosOnColsole = (decompiledConvos) => {

@@ -47,7 +47,7 @@ const handler = async (argv) => {
     })
 
     console.log('Saving testcases...')
-    const decompiledConvos = await new ConvoHandler(crawler.compiler).decompileConvos({ convos, mergeUtterances })
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances })
     _persistScriptsInFiles(decompiledConvos)
     console.log('Crawler finished successfully')
   } catch (e) {
@@ -84,8 +84,8 @@ const _persistScriptsInFiles = ({ scriptObjects, generalUtterances }) => {
   })
 }
 
-const _askUserHandler = async (stuckConversations, crawler) => {
-  return askUserFeedbackOnConsole(stuckConversations, crawler, recycleUserFeedback, output)
+const _askUserHandler = async (stuckConversations) => {
+  return askUserFeedbackOnConsole(stuckConversations, compiler, recycleUserFeedback, output)
 }
 
 const _validator = (botAnswers, userMessage) => {

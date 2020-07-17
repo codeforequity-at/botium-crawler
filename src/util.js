@@ -37,7 +37,7 @@ const getAllValuesByKeyFromObject = (object, key = BUTTONS, exceptUnder = SOURCE
   return values
 }
 
-const askUserFeedbackOnConsole = async (stuckConversations, crawler, recycleUserFeedback, output) => {
+const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUserFeedback, output) => {
   const userFeedbacks = []
   let userFeedbacksPath
   if (recycleUserFeedback) {
@@ -53,7 +53,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, crawler, recycleUser
     const userResponse = _.find(userResponses, userResponse => userResponse.path === stuckConversation.path)
     userResponse.texts = []
 
-    const script = crawler.compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
+    const script = compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
 
     if (skipAll) {
       if (recycleUserFeedback) {
