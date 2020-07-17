@@ -6,6 +6,6 @@ yargsCmd.usage('Botium Crawler CLI\n\nUsage: $0 [options]') // eslint-disable-li
   .version('version', require('../package.json').version).alias('version', 'V')
   .showHelpOnFail(true)
   .strict(true)
-  .command(require('../crawler-run'))
-  .command(require('../edit-feedbacks'))
+  .command(require('../src/crawler-run'))
+  .command(require('../src/edit-feedbacks'))
   .argv

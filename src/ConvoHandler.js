@@ -1,5 +1,3 @@
-const fs = require('fs')
-const path = require('path')
 const util = require('util')
 const _ = require('lodash')
 const slugify = require('slugify')
@@ -13,48 +11,23 @@ module.exports = class ConvoHandler {
     this.compiler = compiler
   }
 
-  async persistConvosInFiles ({ convos, output, mergeUtterances }) {
-    let scriptObjects = await this._decompileConvos(convos)
-    const utterances = []
-    if (mergeUtterances) {
-      utterances.push(...this._mergeUtterances(scriptObjects))
-      scriptObjects = this._replaceUttReferencesInScriptObject(utterances, scriptObjects)
-    }
-    if (!fs.existsSync(output)) {
-      fs.mkdirSync(output)
-    } else if (fs.readdirSync(output).length > 0) {
-      throw new Error(`The output path '${output}' has to be empty`)
-    }
-
-    scriptObjects.forEach((scriptObject) => {
-      const script = scriptObject.script
-      const scriptName = path.join(output,
-        slugify(
-          script.substring(0, script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase() +
-        '.convo.txt')
-      fs.writeFileSync(scriptName, script)
-      debug(`The '${scriptName}' file is persisted`)
-
-      scriptObject.utterances.forEach((utterance) => {
-        const utteranceName = path.join(output, utterance.name)
-        fs.writeFileSync(utteranceName + '.utterances.txt', utterance.script)
-      })
-    })
-
-    utterances.forEach((utterance) => {
-      const utteranceName = path.join(output, utterance.name)
-      fs.writeFileSync(utteranceName + '.utterances.txt', utterance.script)
-    })
-  }
-
-  async _decompileConvos (convos) {
+  async decompileConvos ({ convos, mergeUtterances = true }) {
     debug('Decompile convos')
     const flatConvos = _.flatten(convos)
-    return Promise.all(
+    let scriptObjects = await Promise.all(
       flatConvos.map(async (convo) => {
         return this._getConversationScripts(convo)
       })
     )
+    const generalUtterances = []
+    if (mergeUtterances) {
+      generalUtterances.push(...this._mergeUtterances(scriptObjects))
+      scriptObjects = this._replaceUttReferencesInScriptObject(generalUtterances, scriptObjects)
+    }
+    return {
+      scriptObjects,
+      generalUtterances
+    }
   }
 
   async _getConversationScripts (convo) {

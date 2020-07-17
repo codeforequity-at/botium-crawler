@@ -9,12 +9,15 @@ const DEFAULT_ENTRY_POINTS = ['hello', 'help']
 const PATH_SEPARATOR = ';'
 
 module.exports = class Crawler {
-  constructor ({ config, incomprehensions }, callbackValidationError, callbackAskUser) {
-    this.driver = new BotDriver(config && config.Capabilities, config && config.Sources, config && config.Envs)
+  constructor ({ driver, config }, callbackAskUser, callbackValidatior) {
+    if (driver) {
+      this.driver = driver
+    } else {
+      this.driver = new BotDriver(config && config.Capabilities, config && config.Sources, config && config.Envs)
+    }
     this.compiler = this.driver.BuildCompiler()
     this.containers = {}
-    this.incomprehensions = incomprehensions
-    this.callbackValidationError = callbackValidationError
+    this.callbackValidatior = callbackValidatior
     this.callbackAskUser = callbackAskUser
     this.convos = []
     this.visitedPath = []
@@ -124,7 +127,9 @@ module.exports = class Crawler {
       }
 
       tempConvo.conversation.push(...botAnswers)
-      await this._validateAnswers(botAnswers, userMessage)
+      if (this.callbackValidatior) {
+        await this.callbackValidatior(botAnswers, userMessage)
+      }
 
       if (depth >= this.depth) {
         this._finishConversation(tempConvo, entryPointId, path)
@@ -256,26 +261,6 @@ module.exports = class Crawler {
     tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
-  }
-
-  async _validateAnswers (botAnswers, userMessage) {
-    // INCOMPREHENSION VALIDATION
-    for (const incomprehension of this.incomprehensions) {
-      for (const botAnswer of botAnswers) {
-        if (this.compiler.Match(botAnswer, incomprehension)) {
-          debug('User message is failure to understand by the bot', {
-            userMessage,
-            botAnswer
-          })
-          if (this.callbackValidationError) {
-            this.callbackValidationError('User message is failure to understand by the bot', {
-              userMessage,
-              botAnswer
-            })
-          }
-        }
-      }
-    }
   }
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {

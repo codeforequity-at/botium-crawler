@@ -54,7 +54,7 @@ module.exports = {
     yargs.option('input', {
       describe: 'The path of a json file the user feedbacks are read from.',
       type: 'string',
-      default: './userFeedbacks.json'
+      default: 'crawler-result/userFeedback.json'
     })
     yargs.option('output', {
       describe: 'The path of a json file the user feedbacks are stored into. (By default the same as the value of \'input\' param.)',
