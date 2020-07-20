@@ -48,7 +48,7 @@ const handler = async (argv) => {
 }
 
 module.exports = {
-  command: 'edit-feedbacks',
+  command: 'crawler-feedbacks',
   describe: 'Crawl the chatbot along buttons and generate test cases.',
   builder: (yargs) => {
     yargs.option('input', {
