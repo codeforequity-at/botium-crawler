@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const urlRegex = require('url-regex')
 const debug = require('debug')('botium-crawler-crawler')
 const { BotDriver } = require('botium-core')
 const { getAllValuesByKeyFromObjects } = require('./util')
@@ -195,7 +196,8 @@ module.exports = class Crawler {
         this.visitedPath[entryPointId].push(path)
       }
     } catch (e) {
-      this.visitedPath[entryPointId].push(path)
+      tempConvo.header.name = `${tempConvo.header.name}_FAILED`
+      this._finishConversation(tempConvo, entryPointId, path)
       debug(`Conversation failed on '${path}' path with the following user message: `, userMessage)
       debug('error: ', e)
     }
@@ -310,6 +312,7 @@ module.exports = class Crawler {
         requests.push(...userRequest.texts.map(text => ({ text, isUserRequest: true })))
       }
     }
-    return requests
+    return _.filter(requests, request => !request.payload ||
+      (request.payload && _.isString(request.payload) && !urlRegex({ exact: true, strict: false }).test(request.payload)))
   }
 }

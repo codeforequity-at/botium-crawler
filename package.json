@@ -30,7 +30,8 @@
     "lodash": "^4.17.19",
     "readline-sync": "^1.4.10",
     "yargs": "^15.4.1",
-    "slugify": "^1.4.4"
+    "slugify": "^1.4.4",
+    "url-regex": "^5.0.0"
   },
   "devDependencies": {
     "eslint": "^7.5.0",
