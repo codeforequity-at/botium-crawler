@@ -1,4 +1,5 @@
-const { askUserFeedbackOnConsole, getBotiumDriver } = require('../../src/util')
+const { BotDriver } = require('botium-core')
+const { askUserFeedbackOnConsole } = require('../../src/util')
 const Crawler = require('../../src/Crawler')
 const ConvoHandler = require('../../src/ConvoHandler')
 
@@ -7,7 +8,7 @@ let compiler
 const run = async () => {
   console.log('Botium-Crawler started')
   try {
-    const driver = getBotiumDriver('./botium.json')
+    const driver = new BotDriver()
     if (!driver) {
       throw new Error('Botium driver can not be created.')
     }

@@ -1,10 +1,6 @@
 {
   "botium": {
     "Capabilities": {
-      "RETRY_USERSAYS_ONERROR_REGEXP": [],
-      "RETRY_USERSAYS_NUMRETRIES": null,
-      "RETRY_USERSAYS_FACTOR": null,
-      "RETRY_USERSAYS_MINTIMEOUT": null,
       "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
       "CONTAINERMODE": "echo"
     },

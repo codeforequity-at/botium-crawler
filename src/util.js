@@ -66,10 +66,6 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
       continue
     }
 
-    console.log(`\n---------------------------------------\n
-    ${script}
-    \n---------------------------------------\n`)
-
     if (recycleUserFeedback && userFeedbacks.length > 0) {
       const userFeedbackToReuse = _.find(userFeedbacks,
         userFeedback => userFeedback.path === stuckConversation.path)
@@ -78,7 +74,9 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
         continue
       }
     }
-
+    console.log(`\n---------------------------------------\n
+    ${script}
+    \n---------------------------------------\n`)
     const contiueAnswer = readlineSync.question('This path is stucked before reaching depth. \n' +
       'Would you like to continue with your own answers?  [yes, no, no all]: ', { limit: ['yes', 'no', 'no all'] })
 

@@ -1,6 +1,6 @@
 {
   "name": "botium-crawler",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "engines": {
     "node": ">=10"
   },
@@ -8,8 +8,8 @@
     "botium-crawler-cli": "./bin/cli.js"
   },
   "scripts": {
-    "lint": "eslint \"./src/**/*.js\" index.js crawler-run.js edit-feedbacks.js",
-    "lint:fix": "eslint --fix \"./src/**/*.js\" index.js crawler-run.js edit-feedbacks.js"
+    "lint": "eslint \"./src/**/*.js\" index.js",
+    "lint:fix": "eslint --fix \"./src/**/*.js\" index.js"
   },
   "repository": {
     "type": "git",
@@ -18,48 +18,24 @@
   "author": "Botium GmbH",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/codeforequity-at/botium-core/issues"
+    "url": "https://github.com/codeforequity-at/botium-crawler/issues"
   },
   "homepage": "https://www.botium.ai",
+  "peerDependencies": {
+    "botium-core": "*"
+  },
   "dependencies": {
-    "botium-connector-alexa-avs": "https://github.com/codeforequity-at/botium-connector-alexa-avs.git#master",
-    "botium-connector-alexa-smapi": "https://github.com/codeforequity-at/botium-connector-alexa-smapi.git#master",
-    "botium-connector-botkit": "https://github.com/codeforequity-at/botium-connector-botkit.git#master",
-    "botium-connector-botkit-websocket": "https://github.com/Naktibalda/botium-connector-botkit-websocket.git#master",
-    "botium-connector-botpress": "https://github.com/codeforequity-at/botium-connector-botpress.git#master",
-    "botium-connector-dialogflow": "https://github.com/codeforequity-at/botium-connector-dialogflow.git#master",
-    "botium-connector-directline3": "https://github.com/codeforequity-at/botium-connector-directline3.git#master",
-    "botium-connector-echo": "https://github.com/codeforequity-at/botium-connector-echo.git#feature/Botium-crawler-test",
-    "botium-connector-fbwebhook": "https://github.com/codeforequity-at/botium-connector-fbwebhook.git#master",
-    "botium-connector-google-assistant": "https://github.com/codeforequity-at/botium-connector-google-assistant.git#master",
-    "botium-connector-holmes": "https://github.com/codeforequity-at/botium-connector-holmes.git#master",
-    "botium-connector-koreai-webhook": "https://github.com/codeforequity-at/botium-connector-koreai-webhook.git#master",
-    "botium-connector-lex": "https://github.com/codeforequity-at/botium-connector-lex.git#master",
-    "botium-connector-luis": "https://github.com/codeforequity-at/botium-connector-luis.git#master",
-    "botium-connector-pandorabots": "https://github.com/codeforequity-at/botium-connector-pandorabots.git#master",
-    "botium-connector-qnamaker": "https://github.com/codeforequity-at/botium-connector-qnamaker.git#master",
-    "botium-connector-rasa": "https://github.com/codeforequity-at/botium-connector-rasa.git#master",
-    "botium-connector-sapcai": "https://github.com/codeforequity-at/botium-connector-sapcai.git#master",
-    "botium-connector-teneo": "https://github.com/codeforequity-at/botium-connector-teneo.git#master",
-    "botium-connector-ubitec": "https://github.com/codeforequity-at/botium-connector-ubitec.git#master",
-    "botium-connector-watson": "https://github.com/codeforequity-at/botium-connector-watson.git#master",
-    "botium-connector-webdriverio": "https://github.com/codeforequity-at/botium-connector-webdriverio.git#feature/BOT-1419-Botium-crawler",
-    "botium-connector-websocket": "https://github.com/codeforequity-at/botium-connector-websocket.git#master",
-    "botium-connector-wechat": "https://github.com/codeforequity-at/botium-connector-wechat.git#master",
-    "botium-connector-whatsapp": "https://github.com/codeforequity-at/botium-connector-whatsapp.git#master",
-    "botium-connector-witai": "https://github.com/codeforequity-at/botium-connector-witai.git#master",
-    "botium-core": "https://github.com/codeforequity-at/botium-core.git#develop",
     "debug": "^4.1.1",
     "flat": "^5.0.0",
     "lodash": "^4.17.19",
     "readline-sync": "^1.4.10",
-    "yargs": "^15.3.1",
+    "yargs": "^15.4.1",
     "slugify": "^1.4.4"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
+    "eslint": "^7.5.0",
     "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1"

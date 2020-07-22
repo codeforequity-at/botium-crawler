@@ -124,6 +124,11 @@ module.exports = {
       type: 'string',
       require: true
     })
+    yargs.option('output', {
+      describe: 'Output directory',
+      type: 'string',
+      default: './crawler-result'
+    })
     yargs.option('entryPoints', {
       describe: 'Entry points of the crawler\n (e.g.:  --entryPoints \'hi\' \'special entry point\')\n' +
         'In case of empty entry points the crawler start with the auto welcome message (see \'numberOfWelcomeMessages\' param),' +
@@ -152,11 +157,6 @@ module.exports = {
         '(e.g.:  --incomprehension \'Unkown command\' \'I don\'t understand\')',
       type: 'array',
       default: []
-    })
-    yargs.option('output', {
-      describe: 'Output directory',
-      type: 'string',
-      default: './crawler-result'
     })
     yargs.option('mergeUtterances', {
       describe: 'Merge the same utterances into one file',

@@ -49,12 +49,12 @@ const handler = async (argv) => {
 
 module.exports = {
   command: 'crawler-feedbacks',
-  describe: 'Crawl the chatbot along buttons and generate test cases.',
+  describe: 'Edit userfeedbacks, which are used for the next crawler-run',
   builder: (yargs) => {
     yargs.option('input', {
       describe: 'The path of a json file the user feedbacks are read from.',
       type: 'string',
-      default: 'crawler-result/userFeedback.json'
+      default: './crawler-result/userFeedback.json'
     })
     yargs.option('output', {
       describe: 'The path of a json file the user feedbacks are stored into. (By default the same as the value of \'input\' param.)',
