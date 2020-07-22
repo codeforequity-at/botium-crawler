@@ -30,14 +30,14 @@ You can install botium crawler as library in your own project.
 > npm install botium-crawler
 ```
 
-##Using as CLI tool
+## Using as CLI tool
 
 Botium Crawler CLI tool is able crawl you chatbot various way according to the parameters,
 and it is able to generate and store all possible conversations. 
 
-###Commands
+### Commands
 Basically there are two command in Botium Crawler `crawler-run` and `crawler-feedbacks`.
-####crawler-run command
+#### crawler-run command
 
     $ botium-crawler-cli crawler-run --help
 
@@ -114,7 +114,7 @@ By default the flag is `true`.
 
     $ botium-crawler-cli crawler-run --config ./botium.json --recycleUserFeedback false
 
-#####Example of crawler-run usage
+##### Example of crawler-run usage
 
 In this example the botium echo connector will be used, 
 which basically just echoing back what you say. 
@@ -207,7 +207,7 @@ The 'crawler-result/scripts/1.1_HI_I-SAID-HI.convo.txt' file is persisted
 Crawler finished successfully
 ```
 
-####crawler-feedbacks command
+#### crawler-feedbacks command
 
 With crawler-feedback command you can edit (`add`, `remove`, `overwrite`) your stored feedbacks in `userFeedback.json`.
 
@@ -223,7 +223,7 @@ By default it reads the `./crawler-result/userFeedback.json` if it exits.
 You can specify the output path, where the edited feedback has to be stored.
 By default it is the same as input, so basically the input file is going to be overwritten.
 
-#####Example of crawler-feedbacks usage
+##### Example of crawler-feedbacks usage
 
 In this example I will edit in the previous example stored `userFeedback.json` file.
 I will overwrite the previously set `I said hi` answer with `I said hello` and then skip the rest:
@@ -290,12 +290,12 @@ crawler-result
     └── userFeedback.json
 ```
 
-##Using as library
+## Using as library
 
 The Botium Crawler is publishing a `Crawler` and a `ConvoHandler`. 
 See the an example of usage under `samples/api` folder.
 
-####Crawler
+#### Crawler
 
 The `Crawler` need an initialized `BotiumDriver` from Botium Core or a `config` parameter, 
 which is a json object with the corresponding `Capabilities`.
@@ -309,7 +309,7 @@ This function parameters are identical with the CLI parameters.
 
     `crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [] })`
 
-####ConvoHandler
+#### ConvoHandler
 
 The `ConvoHandler` can decompile the result of the `crawl` function with `decompileConvos` function.
 The `decompileConvos` function result is an object with a `scriptObjects` array 
