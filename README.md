@@ -6,9 +6,9 @@
 [![npm version](https://badge.fury.io/js/botium-crawler.svg)](https://badge.fury.io/js/botium-crawler)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
-Botium Crawler is a useful tool to crawl your chatbot along buttons
-and generate all possible conversations. 
-The generated conversations can be used as test cases in Botium Box.
+The **Botium Crawler** is doing the work of detecting the conversation flows supported by your chatbot by itself. It does so by analyzing the **quick responses** offered by your chatbot and **simulating clicks on all of the options** in parallel, following all pathes down **until it reaches the end of the conversation**.
+
+All detected conversation flows along all pathes are saved as Botium test cases and utterance lists and can be used as base for a **regression test set**.
 
 **_IF YOU LIKE WHAT YOU SEE, PLEASE CONSIDER GIVING US A STAR ON GITHUB!_**
 
