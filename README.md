@@ -1,10 +1,14 @@
-Botium Crawler
-======================================
+# Botium Crawler
+ 
+[![NPM](https://nodei.co/npm/botium-crawler.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/botium-crawler/)
+
+[![Codeship Status for codeforequity-at/botium-crawler](https://app.codeship.com/projects/f99fdf80-ae3a-0138-43f7-5ab05f369f1d/status?branch=master)](https://app.codeship.com/projects/403709)
+[![npm version](https://badge.fury.io/js/botium-crawler.svg)](https://badge.fury.io/js/botium-crawler)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+
 Botium Crawler is a useful tool to crawl your chatbot along buttons
 and generate all possible conversations. 
 The generated conversations can be used as test cases in Botium Box.
- 
-TODO Badges!!!
 
 **_IF YOU LIKE WHAT YOU SEE, PLEASE CONSIDER GIVING US A STAR ON GITHUB!_**
 
