@@ -122,7 +122,7 @@ module.exports = {
     yargs.option('config', {
       describe: 'Botium config json file path',
       type: 'string',
-      require: true
+      default: './botium.json'
     })
     yargs.option('output', {
       describe: 'Output directory',

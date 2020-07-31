@@ -48,11 +48,11 @@ Basically there are two command in Botium Crawler `crawler-run` and `crawler-fee
 
 **--config**
 
-The only required parameter is the `config` parameter, 
-where you have to specify the path of a json configuration file (e.g.: `botium.json`). 
+You can set the path of a json configuration file (e.g.: `botium.json`). 
 (You can create it manually or export it from Botium Box)
+By default the path is `./botium.json`.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json
+    $ botium-crawler-cli crawler-run --config ./custom-path/botium.json
 
 **--output**
 
@@ -211,6 +211,9 @@ The 'crawler-result/scripts/1.1_HI_I-SAID-HI.convo.txt' file is persisted
 Crawler finished successfully
 ```
 
+> The convo file is going to be created, despite something goes wrong with any conversation,
+> but it will be differentiated by a `FAILED` postfix in convo name and filename ( e.g.: `1.1_HI_I-SAID-HI_FAILED.convo.txt` ). 
+ 
 #### crawler-feedbacks command
 
 With crawler-feedback command you can edit (`add`, `remove`, `overwrite`) your stored feedbacks in `userFeedback.json`.
