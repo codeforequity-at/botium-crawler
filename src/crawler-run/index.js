@@ -111,7 +111,7 @@ const _logError = (message, payload) => {
   }
   const error = fs.createWriteStream(path.join(output, 'error.log'), { flags: 'a' })
   error.write(`[${new Date().toISOString()}] ${message}:\n`)
-  error.write(`${JSON.stringify(payload)}\n\n`)
+  error.write(`${JSON.stringify(payload, 0, 2)}\n\n`)
   error.end()
 }
 

@@ -114,7 +114,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
     if (!fs.existsSync(output)) {
       fs.mkdirSync(output)
     }
-    fs.writeFileSync(userFeedbacksPath, JSON.stringify(userFeedbacks), 'utf8')
+    fs.writeFileSync(userFeedbacksPath, JSON.stringify(userFeedbacks, 0, 2), 'utf8')
   }
   return userResponses
 }

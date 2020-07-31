@@ -43,7 +43,7 @@ const handler = async (argv) => {
   }
   _.remove(userFeedbacks, userFeedback => userFeedback.remove)
   if (readlineSync.keyInYN('Edit finished, exiting... Do you want to save your modifications?')) {
-    fs.writeFileSync(output || input, JSON.stringify(userFeedbacks), 'utf8')
+    fs.writeFileSync(output || input, JSON.stringify(userFeedbacks, 0, 2), 'utf8')
   }
 }
 
