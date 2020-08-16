@@ -1,0 +1,10 @@
+{
+  "name": "botium-crawler-sample-watson",
+  "version": "1.0.0",
+  "scripts": {
+    "crawl": "botium-crawler-cli crawler-run --numberOfWelcomeMessages 2 --waitForPrompt 1000 --depth 7"
+  },
+  "dependencies": {
+    "botium-crawler": "../.."
+  }
+}

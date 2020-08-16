@@ -50,7 +50,6 @@ Basically there are two command in Botium Crawler `crawler-run` and `crawler-fee
 
 You can set the path of a json configuration file (e.g.: `botium.json`). 
 (You can create it manually or export it from Botium Box)
-By default the path is `./botium.json`.
 
     $ botium-crawler-cli crawler-run --config ./custom-path/botium.json
 

@@ -120,15 +120,10 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
 }
 
 const getBotiumDriver = (configPath) => {
-  const configObject = JSON.parse(fs.readFileSync(configPath, 'utf8'))
-  if (!configObject.botium) {
-    console.error(`'botium' property is missing from the '${configPath}' file`)
-    return
+  if (configPath) {
+    process.env.BOTIUM_CONFIG = configPath
   }
-  const botiumConfig = configObject.botium
-  return new BotDriver(botiumConfig && botiumConfig.Capabilities,
-    botiumConfig && botiumConfig.Sources,
-    botiumConfig && botiumConfig.Envs)
+  return new BotDriver()
 }
 
 module.exports = {

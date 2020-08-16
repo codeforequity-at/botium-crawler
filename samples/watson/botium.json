@@ -1,0 +1,12 @@
+{
+  "botium": {
+    "Capabilities": {
+      "CONTAINERMODE": "watson",
+      "WATSON_ASSISTANT_VERSION": "V2",
+      "WATSON_URL": "https://api.eu-de.assistant.watson.cloud.ibm.com",
+      "WATSON_APIKEY": "xxx",
+      "WATSON_ASSISTANT_ID": "yyy",
+      "WATSON_WELCOME_MESSAGE": ""
+    }
+  }
+}

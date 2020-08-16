@@ -26,7 +26,7 @@ module.exports = class Crawler {
     this.userRequests = []
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [] }) {
+  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [], waitForPrompt = null }) {
     debug(`A crawler started with '${entryPoints}' entry point and ${depth} depth`)
     if (!Array.isArray(entryPoints)) {
       debug('The entryPoints param has to be an array of strings')
@@ -42,14 +42,14 @@ module.exports = class Crawler {
     this.ignoreSteps = ignoreSteps
     let entryPointId = 0
     await Promise.all(entryPoints.map(async (entryPointText) => {
-      return this._makeConversations(entryPointText, entryPointId++, numberOfWelcomeMessages)
+      return this._makeConversations(entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
     }))
 
     debug('Crawler finished')
     return this.convos
   }
 
-  async _makeConversations (entryPointText, entryPointId, numberOfWelcomeMessages) {
+  async _makeConversations (entryPointText, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -87,6 +87,7 @@ module.exports = class Crawler {
           depth: 1,
           path: entryPointText,
           entryPointId,
+          waitForPrompt,
           tempConvo: {
             header: {
               name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
@@ -108,7 +109,7 @@ module.exports = class Crawler {
     }
   }
 
-  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, tempConvo }) {
+  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo }) {
     try {
       const botAnswers = []
       if (userMessage) {
@@ -120,6 +121,18 @@ module.exports = class Crawler {
         tempConvo.conversation.push(userMessage)
         await this.containers[entryPointId].UserSays(userMessage)
         botAnswers.push(await this.containers[entryPointId].WaitBotSays())
+        if (waitForPrompt > 0) {
+          const checkPoint = new Date()
+          do {
+            const waitForPromptLeft = Math.max(0, waitForPrompt - (new Date() - checkPoint))
+            try {
+              botAnswers.push(await this.containers[entryPointId].WaitBotSays(null, waitForPromptLeft))
+            } catch (err) {
+              if (err.message.indexOf('Bot did not respond within') < 0) throw err
+            }
+          }
+          while (new Date() - checkPoint <= waitForPrompt)
+        }
       } else {
         for (let i = 0; i < numberOfWelcomeMessages; i++) {
           botAnswers.push(await this.containers[entryPointId].WaitBotSays())
@@ -182,6 +195,7 @@ module.exports = class Crawler {
             depth: depth + 1,
             path: requestPath,
             entryPointId,
+            waitForPrompt,
             tempConvo
           }
           await this._makeConversation(params)

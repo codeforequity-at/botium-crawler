@@ -23,7 +23,8 @@ const handler = async (argv) => {
     numberOfWelcomeMessages,
     depth,
     ignoreSteps,
-    mergeUtterances
+    mergeUtterances,
+    waitForPrompt
   } = argv
 
   const driver = getBotiumDriver(config)
@@ -43,7 +44,8 @@ const handler = async (argv) => {
       entryPoints,
       numberOfWelcomeMessages,
       depth,
-      ignoreSteps
+      ignoreSteps,
+      waitForPrompt
     })
 
     console.log('Saving testcases...')
@@ -121,8 +123,7 @@ module.exports = {
   builder: (yargs) => {
     yargs.option('config', {
       describe: 'Botium config json file path',
-      type: 'string',
-      default: './botium.json'
+      type: 'string'
     })
     yargs.option('output', {
       describe: 'Output directory',
@@ -167,6 +168,11 @@ module.exports = {
       describe: 'Reuse and store user answers into a userFeedback.json file in the \'output\' param given directory',
       type: 'boolean',
       default: true
+    })
+    yargs.option('waitForPrompt', {
+      describe: 'Milliseconds to wait for the bot to present the prompt ore response',
+      type: 'number',
+      default: 100
     })
   },
   handler
