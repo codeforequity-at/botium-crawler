@@ -117,6 +117,10 @@ By default the flag is `true`.
 
     $ botium-crawler-cli crawler-run --config ./botium.json --recycleUserFeedback false
 
+**--waitForPrompt**
+
+Milliseconds to wait for the bot to present the prompt ore response. Useful if the bot sends multiple responses at once.
+
 ##### Example of crawler-run usage
 
 In this example the botium echo connector will be used, 
