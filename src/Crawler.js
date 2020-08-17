@@ -21,7 +21,7 @@ module.exports = class Crawler {
     this.callbackAskUser = callbackAskUser
     this.convos = []
     this.visitedPath = []
-    this.pathCounter = {}
+    this.pathTree = []
     this.stuckConversations = []
     this.userRequests = []
   }
@@ -256,26 +256,33 @@ module.exports = class Crawler {
   }
 
   _finishConversation (tempConvo, entryPointId, path) {
-    let partialPath = ''
-    let prefix = `${entryPointId + 1}`
     const pathElements = path.split(PATH_SEPARATOR)
+    const prefix = this._getPrefix(this.pathTree, pathElements[0], pathElements)
 
-    for (let i = 0; i < pathElements.length; i++) {
-      const pathElement = pathElements[i]
-      if (i === 0) {
-        partialPath = pathElement
-      } else {
-        partialPath = partialPath + PATH_SEPARATOR + pathElement
-        if (!this.pathCounter[partialPath]) {
-          this.pathCounter[partialPath] = 1
-        }
-        prefix = `${prefix}.${this.pathCounter[partialPath]}`
-        this.pathCounter[partialPath]++
-      }
-    }
     tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
+  }
+
+  _getPrefix (elements, pathElement, pathElements, prefix) {
+    let index = _.findIndex(elements, e => e.name === pathElement)
+    if (index < 0) {
+      elements.push({
+        name: pathElement,
+        children: []
+      })
+      index = elements.length - 1
+    }
+    const nextPathElementIndex = pathElements.indexOf(pathElement) + 1
+    if (!prefix) {
+      prefix = index + 1
+    } else {
+      prefix = `${prefix}.${index + 1}`
+    }
+    if (pathElements.indexOf(pathElement) >= 0 && pathElements.length > nextPathElementIndex) {
+      return this._getPrefix(elements[index].children, pathElements[nextPathElementIndex], pathElements, prefix)
+    }
+    return prefix
   }
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {
