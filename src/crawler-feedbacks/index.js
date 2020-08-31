@@ -33,16 +33,19 @@ const handler = async (argv) => {
       if (editAnswers === 'overwrite') {
         userFeedback.answers = []
       }
-      let additionalAnswer = true
+      let additionalAnswer = 'yes'
       let i = userFeedback.answers.length + 1
-      while (additionalAnswer) {
+      while (additionalAnswer === 'yes') {
         userFeedback.answers.push(readlineSync.question(`Enter your ${i++}. answer: `))
-        additionalAnswer = readlineSync.keyInYN('Do you want to add additional answers?')
+        additionalAnswer = readlineSync.question('Do you want to add additional answers? [yes, no]: ',
+          { limit: ['yes', 'no'] })
       }
     }
   }
   _.remove(userFeedbacks, userFeedback => userFeedback.remove)
-  if (readlineSync.keyInYN('Edit finished, exiting... Do you want to save your modifications?')) {
+  const saveModifications = readlineSync.question('Edit finished, exiting... Do you want to save your modifications? [yes, no]: ',
+    { limit: ['yes', 'no'] })
+  if (saveModifications === 'yes') {
     fs.writeFileSync(output || input, JSON.stringify(userFeedbacks, 0, 2), 'utf8')
   }
 }

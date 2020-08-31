@@ -94,11 +94,12 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
     }
 
     if (contiueAnswer === 'yes') {
-      let additionalAnswer = true
+      let additionalAnswer = 'yes'
       let i = 1
-      while (additionalAnswer) {
+      while (additionalAnswer === 'yes') {
         userResponse.texts.push(readlineSync.question(`Enter your ${i++}. answer: `))
-        additionalAnswer = readlineSync.keyInYN('Do you want to add additional answers?')
+        additionalAnswer = readlineSync.question('Do you want to add additional answers? [yes, no]: ',
+          { limit: ['yes', 'no'] })
       }
       if (recycleUserFeedback) {
         userFeedbacks.push({
