@@ -334,6 +334,7 @@ module.exports = class Crawler {
       }
     }
     return _.filter(requests, request => !request.payload ||
-      (request.payload && _.isString(request.payload) && !urlRegex({ exact: true, strict: false }).test(request.payload)))
+        (request.payload && _.isObject(request.payload)) ||
+        (request.payload && _.isString(request.payload) && !urlRegex({ exact: true, strict: false }).test(request.payload)))
   }
 }

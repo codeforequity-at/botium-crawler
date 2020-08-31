@@ -1,8 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 const slugify = require('slugify')
-const { Capabilities } = require('botium-core')
-const { askUserFeedbackOnConsole, getBotiumDriver } = require('../util')
+const { Capabilities, BotDriver } = require('botium-core')
+const { askUserFeedbackOnConsole } = require('../util')
 const Crawler = require('../Crawler')
 const ConvoHandler = require('../ConvoHandler')
 
@@ -14,20 +14,9 @@ let incomprehension
 let compiler
 
 const handler = async (argv) => {
-  recycleUserFeedback = argv.recycleUserFeedback
-  output = argv.output
-  incomprehension = argv.incomprehension
-  const {
-    config,
-    entryPoints,
-    numberOfWelcomeMessages,
-    depth,
-    ignoreSteps,
-    mergeUtterances,
-    waitForPrompt
-  } = argv
+  const params = _getAndStoreParams(argv)
 
-  const driver = getBotiumDriver(config)
+  const driver = new BotDriver()
   if (!driver) {
     return
   }
@@ -40,21 +29,47 @@ const handler = async (argv) => {
       throw new Error(`The output path '${scriptOutput}' has to be empty`)
     }
     const crawler = new Crawler({ driver }, _askUserHandler, _validator)
-    const convos = await crawler.crawl({
-      entryPoints,
-      numberOfWelcomeMessages,
-      depth,
-      ignoreSteps,
-      waitForPrompt
-    })
+    const convos = await crawler.crawl(params)
 
     console.log('Saving testcases...')
-    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances })
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances: params.mergeUtterances })
     _persistScriptsInFiles(decompiledConvos)
     console.log('Crawler finished successfully')
   } catch (e) {
     console.error('Botium-Crawler failed: ', e)
   }
+}
+
+const _getAndStoreParams = (argv) => {
+  let storedParams = {}
+  if (fs.existsSync('./botium-crawler.json')) {
+    storedParams = JSON.parse(fs.readFileSync('./botium-crawler.json'))
+  }
+
+  recycleUserFeedback = argv.recycleUserFeedback || storedParams.recycleUserFeedback || true
+  output = argv.output || storedParams.output || './crawler-result'
+  incomprehension = argv.incomprehension || storedParams.incomprehension || []
+
+  const params = {
+    recycleUserFeedback,
+    output,
+    incomprehension,
+    config: argv.config || storedParams.config,
+    entryPoints: argv.entryPoints || storedParams.entryPoints || [],
+    numberOfWelcomeMessages: argv.numberOfWelcomeMessages || storedParams.numberOfWelcomeMessages || 0,
+    depth: argv.depth || storedParams.depth || 5,
+    ignoreSteps: argv.ignoreSteps || storedParams.ignoreSteps || [],
+    mergeUtterances: argv.mergeUtterances || storedParams.mergeUtterances || true,
+    waitForPrompt: argv.waitForPrompt || storedParams.waitForPrompt || 100
+  }
+  if (params.config) {
+    process.env.BOTIUM_CONFIG = params.config
+  }
+
+  if (argv.storeParams) {
+    fs.writeFileSync('./botium-crawler.json', JSON.stringify(params, 0, 2), 'utf8')
+  }
+  return params
 }
 
 const _persistScriptsInFiles = ({ scriptObjects, generalUtterances }) => {
@@ -122,57 +137,55 @@ module.exports = {
   describe: 'Crawl the chatbot along buttons and generate test cases.',
   builder: (yargs) => {
     yargs.option('config', {
-      describe: 'Botium config json file path',
+      describe: 'Botium config json file path. (default: \'botium.json\')',
       type: 'string'
     })
     yargs.option('output', {
-      describe: 'Output directory',
-      type: 'string',
-      default: './crawler-result'
+      describe: 'Output directory (default: \'./crawler-result\')',
+      type: 'string'
     })
     yargs.option('entryPoints', {
       describe: 'Entry points of the crawler\n (e.g.:  --entryPoints \'hi\' \'special entry point\')\n' +
         'In case of empty entry points the crawler start with the auto welcome message (see \'numberOfWelcomeMessages\' param),' +
         ' if the bot has no auto welcome message the crawler goes with [\'hello\', \'help\']',
-      type: 'array',
-      default: []
+      type: 'array'
     })
     yargs.option('numberOfWelcomeMessages', {
-      describe: 'The number of welcome messages to wait for by the crawler.',
-      type: 'number',
-      default: 0
+      describe: 'The number of welcome messages to wait for by the crawler. (default: 0)',
+      type: 'number'
     })
     yargs.option('depth', {
-      describe: 'The depth of the crawling',
-      type: 'number',
-      default: 5
+      describe: 'The depth of the crawling. (default: 5)',
+      type: 'number'
     })
     yargs.option('ignoreSteps', {
       describe: 'These steps are going to be skipped during the crawling\n ' +
         '(e.g.:  --ignoreSteps \'something\' \'ignore this message\')',
-      type: 'array',
-      default: []
+      type: 'array'
     })
     yargs.option('incomprehension', {
       describe: 'Expressions that the bot answer, when don\'t understand something\n ' +
         '(e.g.:  --incomprehension \'Unkown command\' \'I don\'t understand\')',
-      type: 'array',
-      default: []
+      type: 'array'
     })
     yargs.option('mergeUtterances', {
-      describe: 'Merge the same utterances into one file',
-      type: 'boolean',
-      default: true
+      describe: 'Merge the same utterances into one file. (default: true)',
+      type: 'boolean'
     })
     yargs.option('recycleUserFeedback', {
-      describe: 'Reuse and store user answers into a userFeedback.json file in the \'output\' param given directory',
-      type: 'boolean',
-      default: true
+      describe: 'Reuse and store user answers into a userFeedback.json file in the \'output\' param given directory. ' +
+        '(default: true)',
+      type: 'boolean'
     })
     yargs.option('waitForPrompt', {
-      describe: 'Milliseconds to wait for the bot to present the prompt ore response',
-      type: 'number',
-      default: 100
+      describe: 'Milliseconds to wait for the bot to present the prompt ore response. (default: 100)',
+      type: 'number'
+    })
+    yargs.option('storeParams', {
+      describe: 'Store all CLI parameters in \'./botium-crawler.json\' file and ' +
+        'reuse these params if the file is there in the root directory.',
+      type: 'boolean',
+      default: false
     })
   },
   handler

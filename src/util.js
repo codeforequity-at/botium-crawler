@@ -3,7 +3,6 @@ const path = require('path')
 const readlineSync = require('readline-sync')
 const flatten = require('flat')
 const _ = require('lodash')
-const { BotDriver } = require('botium-core')
 
 const SOURCE_DATA = 'sourceData'
 const BUTTONS = 'buttons'
@@ -119,16 +118,8 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
   return userResponses
 }
 
-const getBotiumDriver = (configPath) => {
-  if (configPath) {
-    process.env.BOTIUM_CONFIG = configPath
-  }
-  return new BotDriver()
-}
-
 module.exports = {
   getAllValuesByKeyFromObject,
   getAllValuesByKeyFromObjects,
-  askUserFeedbackOnConsole,
-  getBotiumDriver
+  askUserFeedbackOnConsole
 }

@@ -45,6 +45,13 @@ Basically there are two command in Botium Crawler `crawler-run` and `crawler-fee
 
     $ botium-crawler-cli crawler-run --help
 
+##### Parameters
+
+The parameter can be apply two different way. 
+One is the classic way to add these as command line parameters after the `crawler-run` command.
+The other way is to store these parameter into `botium-crawler.json` file into the root of you working directory
+and reuse them for the next run. In this case the parameters are read from the `botium-crawler.json` as default.
+You are able to generate `botium-crawler.json` file with `--storeParams` flag. 
 
 **--config**
 
@@ -68,7 +75,7 @@ from where the crawler is going to start the conversations.
 By default the crawler is going to start with `['hello', 'help']` entry points,
 if the chatbot has no auto welcome message(s). 
 If the chatbot has auto welcome messages, 
-than these messages is going to be taken as entry points, if the user do not specify this parameter.
+than these welcome messages are going to be taken as entry points, if the user do not specify others in this parameter.
 (see `--numberOfWelcomeMessages` parameter)
 
     $ botium-crawler-cli crawler-run --config ./botium.json --entryPoints 'Good Morning' 'Next conversation'
@@ -121,6 +128,30 @@ By default the flag is `true`.
 
 Milliseconds to wait for the bot to present the prompt ore response. Useful if the bot sends multiple responses at once.
 
+    $ botium-crawler-cli crawler-run --waitForPrompt 1000
+
+**--storeParams**
+
+If you would like to generate/overwrite the `./botium-crawler.json` file with you currect parameters, 
+you can turn this flag on. This way the parameter are going to be read from this file for the next run.  
+By default the flag is `false`. 
+
+    $ botium-crawler-cli crawler-run --config ./botium.json --storeParams true
+    
+    Content of ./botium-crawler.json:
+    {
+      "recycleUserFeedback": true,
+      "output": "./crawler-result",
+      "incomprehension": [],
+      "config": "./botium.json",
+      "entryPoints": [],
+      "numberOfWelcomeMessages": 0,
+      "depth": 5,
+      "ignoreSteps": [],
+      "mergeUtterances": true,
+      "waitForPrompt": 100
+    }
+    
 ##### Example of crawler-run usage
 
 In this example the botium echo connector will be used, 
