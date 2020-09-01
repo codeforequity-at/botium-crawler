@@ -34,15 +34,25 @@ const _logDecompiledConvosOnColsole = (decompiledConvos) => {
     console.log('==========================================')
     console.log(scriptObject.script)
 
-    for (const utt of scriptObject.utterances) {
-      console.log('------------------------------------------')
-      console.log(utt.script)
+    if (scriptObject.botUtterances.length > 0) {
+      console.log('--------------------BOT utterances----------------------')
+      for (const utt of scriptObject.botUtterances) {
+        console.log(utt.script + '\n')
+      }
+    }
+
+    if (scriptObject.meUtterances.length > 0) {
+      console.log('---------------------ME utterances---------------------')
+      for (const utt of scriptObject.meUtterances) {
+        console.log(utt.script + '\n')
+      }
     }
   }
-  console.log('\n')
-  for (const utt of decompiledConvos.generalUtterances) {
-    console.log('==========================================')
-    console.log(utt.script)
+  if (decompiledConvos.generalUtterances.length > 0) {
+    console.log('---------------------General utterances---------------------')
+    for (const utt of decompiledConvos.generalUtterances) {
+      console.log(utt.script + '\n')
+    }
   }
   console.log('\n')
 }
