@@ -186,7 +186,9 @@ module.exports = class Crawler {
             sender: 'me',
             messageText: request.text
           }
-          if (!request.isUserRequest) {
+          if (request.isUserRequest) {
+            userMessage.userFeedback = true
+          } else {
             userMessage.buttons = [request]
           }
 

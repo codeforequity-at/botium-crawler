@@ -89,7 +89,12 @@ const _persistScriptsInFiles = ({ scriptObjects, generalUtterances }) => {
     fs.writeFileSync(scriptName, script)
     console.log(`The '${scriptName}' file is persisted`)
 
-    scriptObject.utterances.forEach((utterance) => {
+    scriptObject.botUtterances.forEach((utterance) => {
+      const utteranceName = path.join(scriptOutDir, utterance.name)
+      fs.writeFileSync(utteranceName + '.utterances.txt', utterance.script)
+    })
+
+    scriptObject.meUtterances.forEach((utterance) => {
       const utteranceName = path.join(scriptOutDir, utterance.name)
       fs.writeFileSync(utteranceName + '.utterances.txt', utterance.script)
     })

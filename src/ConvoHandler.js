@@ -21,7 +21,7 @@ module.exports = class ConvoHandler {
     )
     const generalUtterances = []
     if (mergeUtterances) {
-      generalUtterances.push(...this._mergeUtterances(scriptObjects))
+      generalUtterances.push(...this._getGeneralUtterances(scriptObjects))
       scriptObjects = this._replaceUttReferencesInScriptObject(generalUtterances, scriptObjects)
     }
     return {
@@ -31,7 +31,10 @@ module.exports = class ConvoHandler {
   }
 
   async _getConversationScripts (convo) {
-    const utterances = []
+    const utterances = {
+      bot: [],
+      me: []
+    }
     const statistics = { all: 0, empty: 0, multirow: 0, me: 0, bot: 0, filteredOut: 0, utterances: [] }
     for (const step of convo.conversation) {
       statistics.all++
@@ -41,12 +44,12 @@ module.exports = class ConvoHandler {
         if (step.messageText.includes(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) {
           statistics.multirow++
         } else {
-          if (step.sender === 'bot') {
+          if (step.sender === 'bot' || (step.sender === 'me' && step.userFeedback)) {
             const utteranceName = slugify(`UTT_${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
             const utteranceValue = step.messageText
             step.messageText = utteranceName
 
-            utterances.push({
+            utterances[step.sender].push({
               script: utteranceName + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] + utteranceValue,
               name: utteranceName
             })
@@ -58,23 +61,30 @@ module.exports = class ConvoHandler {
           }
         }
       }
-      debug(`Decompiled utterances: ${util.inspect(statistics)}`)
     }
 
+    debug(`Decompiled utterances: ${util.inspect(statistics)}`)
     const scriptDecompiled = this.compiler.Decompile([convo], SCRIPTING_FORMAT)
     debug(`Decompiled script: ${scriptDecompiled}`)
 
-    return { script: scriptDecompiled, utterances }
+    return { script: scriptDecompiled, botUtterances: utterances.bot, meUtterances: utterances.me }
   }
 
-  _mergeUtterances (scriptObjects) {
-    const utterances = []
+  _getGeneralUtterances (scriptObjects) {
+    const botUtterances = []
+    const meUtterances = []
     for (const scriptObject of scriptObjects) {
-      utterances.push(...scriptObject.utterances)
+      botUtterances.push(...scriptObject.botUtterances)
+      meUtterances.push(...scriptObject.meUtterances)
     }
+
+    return [...this._mergeUtterances(botUtterances, 'BOT'), ...this._mergeUtterances(meUtterances, 'ME')]
+  }
+
+  _mergeUtterances (utterances, suffix) {
     const mergedUtterances = _.uniqWith(utterances, (utt, otherUtt) =>
       utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
-        otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
+      otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
     )
 
     let counter = 1
@@ -82,18 +92,18 @@ module.exports = class ConvoHandler {
       mergedUtt.occurances = _.filter(utterances,
         (utt) =>
           utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
-        mergedUtt.script.substring(mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])))
+          mergedUtt.script.substring(mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])))
         .map((utt) => utt.name)
 
       if (mergedUtt.occurances.length > 1) {
         const indexOfEol = mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
         const start = indexOfEol + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL].length
-        mergedUtt.name = `UTT_M${counter++}_${slugify(mergedUtt.script.substring(start, start + 32)).toUpperCase()}`
+        mergedUtt.name = `UTT_M${counter++}_${slugify(mergedUtt.script.substring(start, start + 32)).toUpperCase()}_${suffix}`
         mergedUtt.script = mergedUtt.script.replace(mergedUtt.script.substring(0, indexOfEol), mergedUtt.name)
       }
     }
 
-    return mergedUtterances
+    return _.filter(mergedUtterances, mergedUtt => mergedUtt.occurances.length > 1)
   }
 
   _replaceUttReferencesInScriptObject (utterances, scriptObjects) {
