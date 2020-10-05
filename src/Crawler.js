@@ -1,5 +1,5 @@
 const _ = require('lodash')
-const urlRegex = require('url-regex')
+const urlRegex = require('url-regex-safe')
 const debug = require('debug')('botium-crawler-crawler')
 const { BotDriver } = require('botium-core')
 const { getAllValuesByKeyFromObjects } = require('./util')
