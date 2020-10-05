@@ -22,7 +22,12 @@ All detected conversation flows along all pathes are saved as Botium test cases 
 ## Installation
 
 #### Install as CLI tool
-You can install directly Botium Crawler.
+Install [Botium CLI](https://github.com/codeforequity-at/botium-cli) ( botium crawler is included )
+```
+> npm install -g botium-cli
+```
+
+Or you can install directly Botium Crawler.
 ```
 > npm install -g botium-crawler
 ```
@@ -34,22 +39,22 @@ You can install botium crawler as library in your own project.
 > npm install botium-crawler
 ```
 
-## Using as CLI tool
+## Using as CLI tool with Botium CLI
 
-Botium Crawler CLI tool is able crawl you chatbot various way according to the parameters,
-and it is able to generate and store all possible conversations. 
+Botium CLI using Botium Crawler is able crawl your chatbot various way according to the parameters,
+and it is able to generate and store all possible conversations.
 
 ### Commands
-Basically there are two command in Botium Crawler `crawler-run` and `crawler-feedbacks`.
+Basically there are two command in Botium CLI to use Botium Crawler `crawler-run` and `crawler-feedbacks`.
 #### crawler-run command
 
-    $ botium-crawler-cli crawler-run --help
+    $ botium-cli crawler-run --help
 
 ##### Parameters
 
 The parameter can be apply two different way. 
 One is the classic way to add these as command line parameters after the `crawler-run` command.
-The other way is to store these parameter into `botium-crawler.json` file into the root of you working directory
+The other way is to store these parameters into `botium-crawler.json` file into the root of you working directory
 and reuse them for the next run. In this case the parameters are read from the `botium-crawler.json` as default.
 You are able to generate `botium-crawler.json` file with `--storeParams` flag. 
 
@@ -58,15 +63,15 @@ You are able to generate `botium-crawler.json` file with `--storeParams` flag.
 You can set the path of a json configuration file (e.g.: `botium.json`). 
 (You can create it manually or export it from Botium Box)
 
-    $ botium-crawler-cli crawler-run --config ./custom-path/botium.json
+    $ botium-cli crawler-run --config ./custom-path/botium.json
 
 **--output**
 
-You can set the output folder of the crawler. By default the path is `./crawler-result`.
+You can set the output folder of the crawler result. By default the path is `./crawler-result`.
 A `scripts` folder is going to be created under the output path,
 and the generated convos and utterances are going to be stored here.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --output ../custom-output
+    $ botium-cli crawler-run --config ./botium.json --output ../custom-output
 
 **--entryPoints**
 
@@ -78,7 +83,7 @@ If the chatbot has auto welcome messages,
 than these welcome messages are going to be taken as entry points, if the user do not specify others in this parameter.
 (see `--numberOfWelcomeMessages` parameter)
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --entryPoints 'Good Morning' 'Next conversation'
+    $ botium-cli crawler-run --config ./botium.json --entryPoints 'Good Morning' 'Next conversation'
     
 **--numberOfWelcomeMessages**
 
@@ -86,33 +91,33 @@ You have to specify the number of auto welcome messages exactly, because the cra
 before each conversation. By default this is 0. 
 If the bot has auto welcome messages, each generated conversation will start with the auto welcome messages.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --numberOfWelcomeMessages 2
+    $ botium-cli crawler-run --config ./botium.json --numberOfWelcomeMessages 2
   
 **--depth**
 
 You can specify the depth of the crawling, by default it is 5.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --depth 3
+    $ botium-cli crawler-run --config ./botium.json --depth 3
   
 **--ignoreSteps**
 
 You can specify here the array of messages has to be ignore during the crawling process.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --ignoreSteps 'this message is ignored'
+    $ botium-cli crawler-run --config ./botium.json --ignoreSteps 'this message is ignored'
     
 **--incomprehension**
 
 You can specify here the array of messages, which has to be considered during incomprehension validation.
 The result of the validation is going to be stored in `error.log` file in the `output` folder.
     
-    $ botium-crawler-cli crawler-run --config ./botium.json --incomprehension 'Unkown command'
+    $ botium-cli crawler-run --config ./botium.json --incomprehension 'Unkown command'
 
 **--mergeUtterances**
 
 Setting this flag `true` the same bot answers are going to be merged in one utterance file.
 By default the flag is `true` to avoid high number of utterance files.
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --mergeUtterances false
+    $ botium-cli crawler-run --config ./botium.json --mergeUtterances false
 
 **--recycleUserFeedback**
 
@@ -122,13 +127,13 @@ If this flag is true, then these feedbacks are going to be stored in `userFeedba
 and these answers are automatically used during the next run of the crawler.
 By default the flag is `true`. 
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --recycleUserFeedback false
+    $ botium-cli crawler-run --config ./botium.json --recycleUserFeedback false
 
 **--waitForPrompt**
 
 Milliseconds to wait for the bot to present the prompt ore response. Useful if the bot sends multiple responses at once.
 
-    $ botium-crawler-cli crawler-run --waitForPrompt 1000
+    $ botium-cli crawler-run --waitForPrompt 1000
 
 **--storeParams**
 
@@ -136,7 +141,7 @@ If you would like to generate/overwrite the `./botium-crawler.json` file with yo
 you can turn this flag on. This way the parameter are going to be read from this file for the next run.  
 By default the flag is `false`. 
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --storeParams true
+    $ botium-cli crawler-run --config ./botium.json --storeParams true
     
     Content of ./botium-crawler.json:
     {
@@ -174,7 +179,7 @@ Keeping it simple I set just 'hi' as entry points.
 The commandline will look like this: 
 
 ```
-$ botium-crawler-cli crawler-run --config ./botium.json --entryPoints 'hi'                                                         ✔  718  15:09:37
+$ botium-cli crawler-run --config ./botium.json --entryPoints 'hi'                                                         ✔  718  15:09:37
 Crawler started...
 
 ---------------------------------------
@@ -238,7 +243,7 @@ because the previous feedbacks are stored in `userFeedback.json`.
 So now the commandline much simpler than at the previous run:
 
 ```
-$ botium-crawler-cli crawler-run --config ./botium.json --entryPoints 'hi'                                                         ✔  719  15:13:17
+$ botium-cli crawler-run --config ./botium.json --entryPoints 'hi'                                                         ✔  719  15:13:17
 Crawler started...
 Saving testcases...
 The 'crawler-result/scripts/1.1_HI_I-SAID-HI.convo.txt' file is persisted
@@ -252,7 +257,7 @@ Crawler finished successfully
 
 With crawler-feedback command you can edit (`add`, `remove`, `overwrite`) your stored feedbacks in `userFeedback.json`.
 
-    $ botium-crawler-cli crawler-feedback --help
+    $ botium-cli crawler-feedback --help
 
 **--input**
 
@@ -270,7 +275,7 @@ In this example I will edit in the previous example stored `userFeedback.json` f
 I will overwrite the previously set `I said hi` answer with `I said hello` and then skip the rest:
 
 ```
-$ botium-crawler-cli crawler-feedbacks                                                                                             ✔  730  15:55:19
+$ botium-cli crawler-feedbacks                                                                                             ✔  730  15:55:19
 
 ---------------------------------------
 hi
@@ -320,7 +325,7 @@ Edit finished, exiting... Do you want to save your modifications? [y/n]: y
 Now if I run again the crawler from the previous crawler-run example,
 then the `crawler-result` folder will look like this:
 
-    $ botium-crawler-cli crawler-run --config ./botium.json --entryPoints 'hi'
+    $ botium-cli crawler-run --config ./botium.json --entryPoints 'hi'
 
 ```
 crawler-result
@@ -330,6 +335,8 @@ crawler-result
     │   └── UTT_1.1_HI_I-SAID-HELLO_BOT_2.utterances.txt
     └── userFeedback.json
 ```
+
+> You can use Botium Crawler as individual CLI tool pretty similar as with Botium CLI
 
 ## Using as library
 
