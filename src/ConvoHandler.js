@@ -67,7 +67,7 @@ module.exports = class ConvoHandler {
     const scriptDecompiled = this.compiler.Decompile([convo], SCRIPTING_FORMAT)
     debug(`Decompiled script: ${scriptDecompiled}`)
 
-    return { script: scriptDecompiled, botUtterances: utterances.bot, meUtterances: utterances.me }
+    return { name: convo.header.name, script: scriptDecompiled, stucked: convo.stucked, botUtterances: utterances.bot, meUtterances: utterances.me, err: convo.err }
   }
 
   _getGeneralUtterances (scriptObjects) {
@@ -85,7 +85,7 @@ module.exports = class ConvoHandler {
     const mergedUtterances = _.uniqWith(utterances, (utt, otherUtt) =>
       utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
       otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
-    )
+    ).map(u => ({ ...u }))
 
     let counter = 1
     for (const mergedUtt of mergedUtterances) {
@@ -113,8 +113,9 @@ module.exports = class ConvoHandler {
         for (const scirptObject of replacedScriptObjects) {
           for (const occurance of utterance.occurances) {
             scirptObject.script = scirptObject.script.replace(new RegExp(occurance, 'g'), utterance.name)
+            _.remove(scirptObject.botUtterances, u => u.name === occurance)
+            _.remove(scirptObject.meUtterances, u => u.name === occurance)
           }
-          scirptObject.utterances = []
         }
       }
     }
