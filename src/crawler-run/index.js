@@ -183,7 +183,7 @@ module.exports = {
       type: 'boolean'
     })
     yargs.option('waitForPrompt', {
-      describe: 'Milliseconds to wait for the bot to present the prompt ore response. (default: 100)',
+      describe: 'Milliseconds to wait for the bot to present the response. (default: 100)',
       type: 'number'
     })
     yargs.option('storeParams', {

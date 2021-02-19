@@ -159,6 +159,10 @@ module.exports = class Crawler {
           })
           debug(`Stuck conversation on '${path}' path`)
         } else {
+          if (depth === 1) {
+            throw new Error('Conversation stopped at the first conversation step.')
+          }
+          tempConvo.stucked = true
           this._finishConversation(tempConvo, entryPointId, path)
           debug(`Conversation successfully end on '${path}' path with finding a leaf`)
         }
@@ -212,7 +216,7 @@ module.exports = class Crawler {
         this.visitedPath[entryPointId].push(path)
       }
     } catch (e) {
-      tempConvo.header.name = `${tempConvo.header.name}_FAILED`
+      tempConvo.err = e.message
       this._finishConversation(tempConvo, entryPointId, path)
       debug(`Conversation failed on '${path}' path with the following user message: `, userMessage)
       debug('error: ', e)
