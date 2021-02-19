@@ -263,14 +263,15 @@ module.exports = class Crawler {
 
   _finishConversation (tempConvo, entryPointId, path) {
     const pathElements = path.split(PATH_SEPARATOR)
-    const prefix = this._getPrefix(this.pathTree, pathElements[0], pathElements)
+    const prefix = this._getPrefix(this.pathTree, 0, pathElements)
 
     tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
   }
 
-  _getPrefix (elements, pathElement, pathElements, prefix) {
+  _getPrefix (elements, pathElementIndex, pathElements, prefix) {
+    const pathElement = pathElements[pathElementIndex]
     let index = _.findIndex(elements, e => e.name === pathElement)
     if (index < 0) {
       elements.push({
@@ -279,14 +280,13 @@ module.exports = class Crawler {
       })
       index = elements.length - 1
     }
-    const nextPathElementIndex = pathElements.indexOf(pathElement) + 1
     if (!prefix) {
       prefix = index + 1
     } else {
       prefix = `${prefix}.${index + 1}`
     }
-    if (pathElements.indexOf(pathElement) >= 0 && pathElements.length > nextPathElementIndex) {
-      return this._getPrefix(elements[index].children, pathElements[nextPathElementIndex], pathElements, prefix)
+    if (pathElements.indexOf(pathElement) >= 0 && pathElements.length > pathElementIndex + 1) {
+      return this._getPrefix(elements[index].children, pathElementIndex + 1, pathElements, prefix)
     }
     return prefix
   }
