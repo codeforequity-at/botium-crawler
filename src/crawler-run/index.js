@@ -46,9 +46,14 @@ const _getAndStoreParams = (argv) => {
     storedParams = JSON.parse(fs.readFileSync('./botium-crawler.json'))
   }
 
-  recycleUserFeedback = argv.recycleUserFeedback || storedParams.recycleUserFeedback || true
+  recycleUserFeedback = argv.recycleUserFeedback !== undefined
+    ? argv.recycleUserFeedback : storedParams.recycleUserFeedback !== undefined
+      ? storedParams.recycleUserFeedback : true
   output = argv.output || storedParams.output || './crawler-result'
   incomprehension = argv.incomprehension || storedParams.incomprehension || []
+  const mergeUtterances = argv.mergeUtterances !== undefined
+    ? argv.mergeUtterances : storedParams.mergeUtterances !== undefined
+      ? storedParams.mergeUtterances : true
 
   const params = {
     recycleUserFeedback,
@@ -59,7 +64,7 @@ const _getAndStoreParams = (argv) => {
     numberOfWelcomeMessages: argv.numberOfWelcomeMessages || storedParams.numberOfWelcomeMessages || 0,
     depth: argv.depth || storedParams.depth || 5,
     ignoreSteps: argv.ignoreSteps || storedParams.ignoreSteps || [],
-    mergeUtterances: argv.mergeUtterances || storedParams.mergeUtterances || true,
+    mergeUtterances,
     waitForPrompt: argv.waitForPrompt || storedParams.waitForPrompt || 100
   }
   if (params.config) {
