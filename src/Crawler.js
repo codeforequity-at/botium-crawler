@@ -23,15 +23,23 @@ module.exports = class Crawler {
     this.visitedPath = []
     this.pathTree = []
     this.stuckConversations = []
-    this.userRequests = []
+    this.userAnswers = []
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [], waitForPrompt = null }) {
-    debug(`A crawler started with '${entryPoints}' entry point and ${depth} depth`)
+  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [], waitForPrompt = null, userAnswers = [] }) {
+    debug(`A crawler started with the following params:
+      entryPoints: ${JSON.stringify(entryPoints)},
+      depth: ${depth},
+      numberOfWelcomeMessages: ${numberOfWelcomeMessages},
+      ignoreSteps: ${JSON.stringify(ignoreSteps)},
+      waitForPrompt: ${waitForPrompt},
+      userAnswers: ${JSON.stringify(userAnswers, 0, 2)}`)
+
     if (!Array.isArray(entryPoints)) {
       debug('The entryPoints param has to be an array of strings')
       return this.convos
     }
+    this.userAnswers = userAnswers
 
     const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
     if (entryPoints.length === 0) {
@@ -57,7 +65,6 @@ module.exports = class Crawler {
     this.convos[entryPointId] = []
     this.visitedPath[entryPointId] = []
     this.stuckConversations[entryPointId] = []
-    this.userRequests[entryPointId] = []
     let firstTry = true
 
     while (firstTry || this.stuckConversations[entryPointId].length > 0) {
@@ -67,8 +74,8 @@ module.exports = class Crawler {
         const userResponses = await this.callbackAskUser(this.stuckConversations[entryPointId])
 
         for (const userResponse of userResponses) {
-          if (userResponse.texts && userResponse.texts.length > 0) {
-            this.userRequests[entryPointId].push(userResponse)
+          if (userResponse.answers && userResponse.answers.length > 0) {
+            this.userAnswers.push(userResponse)
           } else {
             const stuckConversation = _.find(this.stuckConversations[entryPointId],
               stuckConversation => stuckConversation.path === userResponse.path)
@@ -150,7 +157,7 @@ module.exports = class Crawler {
         return
       }
 
-      const requests = await this._getRequests(botAnswers, path, entryPointId)
+      const requests = await this._getRequests(botAnswers, path)
       if (requests.length === 0 && !this.visitedPath[entryPointId].includes(path)) {
         if (this.callbackAskUser) {
           this.stuckConversations[entryPointId].push({
@@ -266,6 +273,7 @@ module.exports = class Crawler {
     const prefix = this._getPrefix(this.pathTree, 0, pathElements)
 
     tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
+    tempConvo.path = path
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
   }
@@ -330,13 +338,13 @@ module.exports = class Crawler {
     return welcomeMessageEntryPoint
   }
 
-  async _getRequests (botAnswers, path, entryPointId) {
+  async _getRequests (botAnswers, path) {
     const requests = []
     requests.push(...(await getAllValuesByKeyFromObjects(botAnswers)))
     if (requests.length === 0) {
-      const userRequest = _.find(this.userRequests[entryPointId], userRequest => userRequest.path === path)
+      const userRequest = _.find(this.userAnswers, userRequest => userRequest.path === path)
       if (userRequest) {
-        requests.push(...userRequest.texts.map(text => ({ text, isUserRequest: true })))
+        requests.push(...userRequest.answers.map(text => ({ text, isUserRequest: true })))
       }
     }
     return _.filter(requests, request => !request.payload ||

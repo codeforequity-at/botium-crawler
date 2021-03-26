@@ -28,8 +28,17 @@ const handler = async (argv) => {
     if (fs.existsSync(scriptOutput) && fs.readdirSync(scriptOutput).length > 0) {
       throw new Error(`The output path '${scriptOutput}' has to be empty`)
     }
+
+    const userFeedbacks = []
+    if (recycleUserFeedback) {
+      const userFeedbacksPath = path.join(output, 'userFeedback.json')
+      if (fs.existsSync(userFeedbacksPath)) {
+        userFeedbacks.push(...JSON.parse(fs.readFileSync(userFeedbacksPath, 'utf8')))
+      }
+    }
+
     const crawler = new Crawler({ driver }, _askUserHandler, _validator)
-    const convos = await crawler.crawl(params)
+    const convos = await crawler.crawl(Object.assign(params, { userAnswers: userFeedbacks }))
 
     console.log('Saving testcases...')
     const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances: params.mergeUtterances })
