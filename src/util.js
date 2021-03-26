@@ -50,7 +50,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
 
   for (const stuckConversation of stuckConversations) {
     const userResponse = _.find(userResponses, userResponse => userResponse.path === stuckConversation.path)
-    userResponse.texts = []
+    userResponse.answers = []
 
     const script = compiler.Decompile([stuckConversation.convo], 'SCRIPTING_FORMAT_TXT')
 
@@ -59,7 +59,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
         userFeedbacks.push({
           path: userResponse.path,
           script,
-          answers: userResponse.texts
+          answers: userResponse.answers
         })
       }
       continue
@@ -69,7 +69,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
       const userFeedbackToReuse = _.find(userFeedbacks,
         userFeedback => userFeedback.path === stuckConversation.path)
       if (userFeedbackToReuse) {
-        userResponse.texts.push(...userFeedbackToReuse.answers)
+        userResponse.answers.push(...userFeedbackToReuse.answers)
         continue
       }
     }
@@ -84,7 +84,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
         userFeedbacks.push({
           path: userResponse.path,
           script,
-          answers: userResponse.texts
+          answers: userResponse.answers
         })
       }
       if (contiueAnswer === 'no all') {
@@ -97,7 +97,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
       let additionalAnswer = 'yes'
       let i = 1
       while (additionalAnswer === 'yes') {
-        userResponse.texts.push(readlineSync.question(`Enter your ${i++}. answer: `))
+        userResponse.answers.push(readlineSync.question(`Enter your ${i++}. answer: `))
         additionalAnswer = readlineSync.question('Do you want to add additional answers? [yes, no]: ',
           { limit: ['yes', 'no'] })
       }
@@ -105,7 +105,7 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
         userFeedbacks.push({
           path: userResponse.path,
           script,
-          answers: userResponse.texts
+          answers: userResponse.answers
         })
       }
     }
