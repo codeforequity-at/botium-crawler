@@ -26,12 +26,12 @@ module.exports = class Crawler {
     this.userAnswers = []
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, ignoreSteps = [], waitForPrompt = null, userAnswers = [] }) {
+  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [] }) {
     debug(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
-      ignoreSteps: ${JSON.stringify(ignoreSteps)},
+      exitCriteria: ${JSON.stringify(exitCriteria)},
       waitForPrompt: ${waitForPrompt},
       userAnswers: ${JSON.stringify(userAnswers, 0, 2)}`)
 
@@ -47,7 +47,7 @@ module.exports = class Crawler {
     }
 
     this.depth = depth
-    this.ignoreSteps = ignoreSteps
+    this.exitCriteria = exitCriteria
     let entryPointId = 0
     await Promise.all(entryPoints.map(async (entryPointText) => {
       return this._makeConversations(entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
@@ -187,10 +187,14 @@ module.exports = class Crawler {
           hasStuckedRequest = true
         }
 
-        if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked &&
-            !(this.ignoreSteps.includes(request.text) || this.ignoreSteps.includes(request.payload))) {
+        if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked) {
           if (depth === 1) {
             tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
+          }
+
+          if ((this.exitCriteria.includes(request.text) || this.exitCriteria.includes(request.payload))) {
+            this._finishConversation(tempConvo, entryPointId, requestPath)
+            return
           }
 
           const userMessage = {

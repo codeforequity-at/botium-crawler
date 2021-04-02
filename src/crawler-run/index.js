@@ -72,7 +72,7 @@ const _getAndStoreParams = (argv) => {
     entryPoints: argv.entryPoints || storedParams.entryPoints || [],
     numberOfWelcomeMessages: argv.numberOfWelcomeMessages || storedParams.numberOfWelcomeMessages || 0,
     depth: argv.depth || storedParams.depth || 5,
-    ignoreSteps: argv.ignoreSteps || storedParams.ignoreSteps || [],
+    exitCriteria: argv.exitCriteria || storedParams.exitCriteria || [],
     mergeUtterances,
     waitForPrompt: argv.waitForPrompt || storedParams.waitForPrompt || 100
   }
@@ -177,9 +177,9 @@ module.exports = {
       describe: 'The depth of the crawling. (default: 5)',
       type: 'number'
     })
-    yargs.option('ignoreSteps', {
-      describe: 'These steps are going to be skipped during the crawling\n ' +
-        '(e.g.:  --ignoreSteps \'something\' \'ignore this message\')',
+    yargs.option('exitCriteria', {
+      describe: 'If the button text or payload match with any of these value in the array, then the crawler exit from that conversation at that point.\n ' +
+        '(e.g.:  --exitCriteria \'something\' \'exit at this message\')',
       type: 'array'
     })
     yargs.option('incomprehension', {
