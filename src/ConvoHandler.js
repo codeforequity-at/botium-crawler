@@ -112,7 +112,9 @@ module.exports = class ConvoHandler {
       if (utterance.occurances.length > 1) {
         for (const scirptObject of replacedScriptObjects) {
           for (const occurance of utterance.occurances) {
-            scirptObject.script = scirptObject.script.replace(new RegExp(occurance, 'g'), utterance.name)
+            scirptObject.script = scirptObject.script.replace(
+              new RegExp(occurance + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL], 'g'),
+              utterance.name + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
             _.remove(scirptObject.botUtterances, u => u.name === occurance)
             _.remove(scirptObject.meUtterances, u => u.name === occurance)
           }

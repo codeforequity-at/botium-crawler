@@ -9,7 +9,9 @@
   },
   "scripts": {
     "lint": "eslint \"./src/**/*.js\" index.js",
-    "lint:fix": "eslint --fix \"./src/**/*.js\" index.js"
+    "lint:fix": "eslint --fix \"./src/**/*.js\" index.js",
+    "test": "npm i --no-save botium-core botium-connector-echo && mocha \"./test/**/*.spec.js\"",
+    "test:coverage": "npm i --no-save botium-core botium-connector-echo && nyc mocha \"./test/**/*.spec.js\""
   },
   "repository": {
     "type": "git",
@@ -34,11 +36,15 @@
     "yargs": "^15.4.1"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^7.5.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-standard": "^4.0.1",
+    "mocha": "^8.2.1",
+    "nyc": "^15.1.0"
   }
 }

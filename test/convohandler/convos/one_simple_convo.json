@@ -1,0 +1,17 @@
+[
+  {
+    "header": {
+      "name": "test convo"
+    },
+    "conversation": [
+      {
+        "sender": "me",
+        "messageText": "meText"
+      },
+      {
+        "sender": "bot",
+        "messageText": "botText"
+      }
+    ]
+  }
+]

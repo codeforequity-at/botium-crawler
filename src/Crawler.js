@@ -129,16 +129,16 @@ module.exports = class Crawler {
         await this.containers[entryPointId].UserSays(userMessage)
         botAnswers.push(await this.containers[entryPointId].WaitBotSays())
         if (waitForPrompt > 0) {
-          const checkPoint = new Date()
+          const checkPoint = Date.now()
           do {
-            const waitForPromptLeft = Math.max(0, waitForPrompt - (new Date() - checkPoint))
+            const waitForPromptLeft = Math.max(0, waitForPrompt - (Date.now() - checkPoint))
             try {
               botAnswers.push(await this.containers[entryPointId].WaitBotSays(null, waitForPromptLeft))
             } catch (err) {
               if (err.message.indexOf('Bot did not respond within') < 0) throw err
             }
           }
-          while (new Date() - checkPoint <= waitForPrompt)
+          while (Date.now() - checkPoint <= waitForPrompt)
         }
       } else {
         for (let i = 0; i < numberOfWelcomeMessages; i++) {
