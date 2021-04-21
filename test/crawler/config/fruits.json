@@ -17,10 +17,16 @@
             "messageText": "Here are some fruits",
             "buttons": [
               {
-                "text": "Apple"
+                "text": "Apple",
+                "payload": {
+                  "name": "Apple"
+                }
               },
               {
-                "text": "Pear"
+                "text": "Pear",
+                "payload": {
+                  "name": "Pear"
+                }
               }
             ],
             "nlp": {

@@ -192,9 +192,21 @@ module.exports = class Crawler {
             tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
           }
 
-          if ((this.exitCriteria.includes(request.text) || this.exitCriteria.includes(request.payload))) {
-            this._finishConversation(tempConvo, entryPointId, requestPath)
-            return
+          if (this.exitCriteria.length > 0) {
+            const exit = this.exitCriteria.some((exitCrit) => {
+              const lowerCaseExistCrit = exitCrit.toLowerCase()
+              let exitOnPayload = false
+              if (request.payload) {
+                exitOnPayload = _.isObject(request.payload)
+                  ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseExistCrit)
+                  : request.payload.toLowerCase().startsWith(lowerCaseExistCrit)
+              }
+              return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseExistCrit)
+            })
+            if (exit) {
+              this._finishConversation(tempConvo, entryPointId, requestPath)
+              return
+            }
           }
 
           const userMessage = {
@@ -312,7 +324,7 @@ module.exports = class Crawler {
           await this.containers[entryPointId].WaitBotSays()
         } catch (e) {
           throw new Error(`This chat bot has less welcome message than ${numberOfWelcomeMessages}.
-            Please set 'numberOfWelcomeMessages' to the correct number of welcome messages..`)
+Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`)
         }
       }
       let hasCorrectNumberOfWelcomeMessage = false
