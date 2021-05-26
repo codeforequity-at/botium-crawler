@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const slugify = require('slugify')
+const debug = require('debug')
 const { Capabilities, BotDriver } = require('botium-core')
 const { askUserFeedbackOnConsole } = require('../util')
 const Crawler = require('../Crawler')
@@ -78,6 +79,10 @@ const _getAndStoreParams = (argv) => {
   }
   if (params.config) {
     process.env.BOTIUM_CONFIG = params.config
+  }
+
+  if (argv.verbose) {
+    debug.enable('botium-*')
   }
 
   if (argv.storeParams) {
@@ -203,6 +208,11 @@ module.exports = {
     yargs.option('storeParams', {
       describe: 'Store all CLI parameters in \'./botium-crawler.json\' file and ' +
         'reuse these params if the file is there in the root directory.',
+      type: 'boolean',
+      default: false
+    })
+    yargs.option('verbose', {
+      describe: 'Verbose developer log on console',
       type: 'boolean',
       default: false
     })
