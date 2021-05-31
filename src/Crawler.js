@@ -211,7 +211,7 @@ module.exports = class Crawler {
 
           const userMessage = {
             sender: 'me',
-            messageText: request.text
+            messageText: request.payload ? JSON.stringify(request.payload) : request.text
           }
           if (request.isUserRequest) {
             userMessage.userFeedback = true

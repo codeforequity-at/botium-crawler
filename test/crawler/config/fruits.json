@@ -39,7 +39,7 @@
         },
         {
           "input": [
-            "Apple"
+            "{\"name\":\"Apple\"}"
           ],
           "output": {
             "messageText": "Apple colors",
@@ -61,7 +61,7 @@
         },
         {
           "input": [
-            "Pear"
+            "{\"name\":\"Pear\"}"
           ],
           "output": {
             "messageText": "Pear colors",
