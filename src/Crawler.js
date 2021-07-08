@@ -154,7 +154,7 @@ module.exports = class Crawler {
       if (depth >= this.depth) {
         this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation successfully end on '${path}' path with reaching ${depth} depth`)
-        return
+        return true
       }
 
       const requests = await this._getRequests(botAnswers, path)
@@ -165,17 +165,19 @@ module.exports = class Crawler {
             convo: Object.assign({}, tempConvo)
           })
           debug(`Stuck conversation on '${path}' path`)
+          return false
         } else {
           if (depth === 1) {
             throw new Error('Conversation stopped at the first conversation step.')
           }
           tempConvo.stucked = true
           this._finishConversation(tempConvo, entryPointId, path)
-          debug(`Conversation successfully end on '${path}' path with finding a leaf`)
+          debug(`Conversation successfully end on '${path}' path with finding an open-ended question`)
+          return true
         }
-        return
       }
 
+      const filteredRequests = []
       let hasStuckedRequest = false
       for (const request of requests) {
         const requestPath = request.payload
@@ -188,55 +190,77 @@ module.exports = class Crawler {
         }
 
         if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked) {
-          if (depth === 1) {
-            tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
-          }
-
-          if (this.exitCriteria.length > 0) {
-            const exit = this.exitCriteria.some((exitCrit) => {
-              const lowerCaseExistCrit = exitCrit.toLowerCase()
-              let exitOnPayload = false
-              if (request.payload) {
-                exitOnPayload = _.isObject(request.payload)
-                  ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseExistCrit)
-                  : request.payload.toLowerCase().startsWith(lowerCaseExistCrit)
-              }
-              return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseExistCrit)
-            })
-            if (exit) {
-              this._finishConversation(tempConvo, entryPointId, requestPath)
-              return
-            }
-          }
-
-          const userMessage = {
-            sender: 'me',
-            messageText: request.payload ? JSON.stringify(request.payload) : request.text
-          }
-          if (request.isUserRequest) {
-            userMessage.userFeedback = true
-          } else {
-            userMessage.buttons = [request]
-          }
-
-          const params = {
-            userMessage,
-            depth: depth + 1,
-            path: requestPath,
-            entryPointId,
-            waitForPrompt,
-            tempConvo
-          }
-          await this._makeConversation(params)
-
-          return
+          filteredRequests.push(request)
         }
+      }
+
+      let pathVisited = false
+      if (filteredRequests.length === 1) {
+        pathVisited = true
+      }
+
+      if (filteredRequests.length > 0) {
+        const request = filteredRequests[0]
+        const requestPath = request.payload
+          ? path + PATH_SEPARATOR + request.text + JSON.stringify(request.payload)
+          : path + PATH_SEPARATOR + request.text
+        if (depth === 1) {
+          tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
+        }
+
+        if (this.exitCriteria.length > 0) {
+          const exit = this.exitCriteria.some((exitCrit) => {
+            const lowerCaseExistCrit = exitCrit.toLowerCase()
+            let exitOnPayload = false
+            if (request.payload) {
+              exitOnPayload = _.isObject(request.payload)
+                ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseExistCrit)
+                : request.payload.toLowerCase().startsWith(lowerCaseExistCrit)
+            }
+            return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseExistCrit)
+          })
+          if (exit) {
+            this._finishConversation(tempConvo, entryPointId, requestPath)
+            debug(`Conversation successfully end on '${requestPath}' path with matching to one of the exit criteria`)
+            return pathVisited
+          }
+        }
+
+        const userMessage = {
+          sender: 'me',
+          messageText: request.payload ? JSON.stringify(request.payload) : request.text
+        }
+        if (request.isUserRequest) {
+          userMessage.userFeedback = true
+        } else {
+          userMessage.buttons = [request]
+        }
+
+        const params = {
+          userMessage,
+          depth: depth + 1,
+          path: requestPath,
+          entryPointId,
+          waitForPrompt,
+          tempConvo
+        }
+        const allChildVisited = await this._makeConversation(params)
+        if (pathVisited && allChildVisited && !hasStuckedRequest) {
+          debug(`All child nodes are visited for '${path}' path`)
+          this.visitedPath[entryPointId].push(path)
+        }
+
+        return pathVisited && allChildVisited
       }
 
       if (hasStuckedRequest) {
         this.stuckConversations[entryPointId].push({ path })
+        debug(`Stuck conversation on '${path}' path`)
+        return false
       } else {
         this.visitedPath[entryPointId].push(path)
+        debug(`The '${path}' path is visited`)
+        return true
       }
     } catch (e) {
       tempConvo.err = e.message
@@ -292,6 +316,7 @@ module.exports = class Crawler {
     tempConvo.path = path
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
+    debug(`Conversation finished on '${path} path'`)
   }
 
   _getPrefix (elements, pathElementIndex, pathElements, prefix) {
@@ -350,6 +375,7 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
             Please set 'numberOfWelcomeMessages' to the correct number of welcome messages..`)
       }
     }
+    debug('Number of welcome messages validation is successfully ended')
     await this._stop(entryPointId)
     return welcomeMessageEntryPoint
   }
