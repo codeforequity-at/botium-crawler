@@ -383,11 +383,9 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
   async _getRequests (botAnswers, path) {
     const requests = []
     requests.push(...(await getAllValuesByKeyFromObjects(botAnswers)))
-    if (requests.length === 0) {
-      const userRequest = _.find(this.userAnswers, userRequest => userRequest.path === path)
-      if (userRequest) {
-        requests.push(...userRequest.answers.map(text => ({ text, isUserRequest: true })))
-      }
+    const userRequest = _.find(this.userAnswers, userRequest => userRequest.path === path)
+    if (userRequest) {
+      requests.push(...userRequest.answers.map(text => ({ text, isUserRequest: true })))
     }
     return _.filter(requests, request => !request.payload ||
         (request.payload && _.isObject(request.payload)) ||
