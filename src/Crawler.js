@@ -24,22 +24,26 @@ module.exports = class Crawler {
     this.pathTree = []
     this.stuckConversations = []
     this.userAnswers = []
+    this.endOfConversations = []
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [] }) {
+  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [], endOfConversations = [] }) {
     debug(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
       exitCriteria: ${JSON.stringify(exitCriteria)},
       waitForPrompt: ${waitForPrompt},
-      userAnswers: ${JSON.stringify(userAnswers, 0, 2)}`)
+      userAnswers: ${JSON.stringify(userAnswers, 0, 2)},
+      endOfConversations: ${JSON.stringify(endOfConversations)}`
+    )
 
     if (!Array.isArray(entryPoints)) {
       debug('The entryPoints param has to be an array of strings')
       return this.convos
     }
     this.userAnswers = userAnswers
+    this.endOfConversations = endOfConversations
 
     const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
     if (entryPoints.length === 0) {
@@ -149,6 +153,12 @@ module.exports = class Crawler {
       tempConvo.conversation.push(...botAnswers)
       if (this.callbackValidatior) {
         await this.callbackValidatior(botAnswers, userMessage)
+      }
+
+      if (this.endOfConversations.includes(path)) {
+        this._finishConversation(tempConvo, entryPointId, path)
+        debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
+        return true
       }
 
       if (depth >= this.depth) {

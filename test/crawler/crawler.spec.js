@@ -113,4 +113,17 @@ describe('Crawler test', function () {
     assert.isTrue(flatConvos[0].stucked)
     assert.equal(flatConvos[0].path, 'Hello;Test answer')
   })
+
+  it('Test simple echo bot with end of conversation', async function () {
+    process.env.BOTIUM_CONFIG = path.resolve(__dirname, CONFIG_DIR, 'fruits.json')
+    const endOfConversations = ['Fruits;Apple{"name":"Apple"}']
+    const driver = new BotDriver()
+    const crawler = new Crawler({ driver })
+    const convos = await crawler.crawl({ entryPoints: ['Fruits'], endOfConversations })
+    const flatConvos = _.flatten(convos)
+    assert.equal(flatConvos.length, 4)
+    assert.equal(flatConvos[0].header.name, '1.1_Fruits_Apple')
+    assert.equal(flatConvos[0].conversation.length, 4)
+    assert.equal(flatConvos[0].path, 'Fruits;Apple{"name":"Apple"}')
+  })
 })
