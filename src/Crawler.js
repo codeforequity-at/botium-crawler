@@ -155,15 +155,17 @@ module.exports = class Crawler {
         await this.callbackValidatior(botAnswers, userMessage)
       }
 
-      if (this.endOfConversations.includes(path)) {
-        this._finishConversation(tempConvo, entryPointId, path)
-        debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
-        return true
-      }
-
       if (depth >= this.depth) {
         this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation successfully end on '${path}' path with reaching ${depth} depth`)
+        return true
+      }
+
+      if (this.endOfConversations.includes(path)) {
+        tempConvo.stucked = true
+        tempConvo.markedWithEndOfConversation = true
+        this._finishConversation(tempConvo, entryPointId, path)
+        debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
         return true
       }
 
