@@ -50,18 +50,23 @@ module.exports = class Crawler {
       entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
     }
 
+    let hasWelcomeAndEntryPoint = false
+    if (entryPoints.length > 0 && welcomeMessageEntryPoint && welcomeMessageEntryPoint.length > 0) {
+      hasWelcomeAndEntryPoint = true
+    }
+
     this.depth = depth
     this.exitCriteria = exitCriteria
     let entryPointId = 0
     await Promise.all(entryPoints.map(async (entryPointText) => {
-      return this._makeConversations(entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
+      return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
     }))
 
     debug('Crawler finished')
     return this.convos
   }
 
-  async _makeConversations (entryPointText, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
+  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -90,13 +95,13 @@ module.exports = class Crawler {
         this.stuckConversations[entryPointId] = []
       }
 
-      while (!this.visitedPath[entryPointId].includes(entryPointText) &&
-      !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === entryPointText)) {
+      while (!this.visitedPath[entryPointId].includes(path) &&
+      !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === path)) {
         await this._start(entryPointId)
         const params = {
           numberOfWelcomeMessages,
           depth: 1,
-          path: entryPointText,
+          path,
           entryPointId,
           waitForPrompt,
           tempConvo: {
