@@ -7,11 +7,15 @@ const CONVOS_DIR = 'convos'
 
 describe('ConvoHandler test', function () {
   it('decompile one simple convo', async function () {
-    const convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'one_simple_convo.json')))
+    const crawlerResult = {
+      err: 'error'
+    }
+    crawlerResult.convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'one_simple_convo.json')))
     const driver = new BotDriver()
     const compiler = driver.BuildCompiler()
     const decompiledConvos = await new ConvoHandler(compiler)
-      .decompileConvos({ convos, mergeUtterances: false })
+      .decompileConvos({ crawlerResult, mergeUtterances: false })
+    assert.equal(decompiledConvos.err, 'error')
     assert.equal(decompiledConvos.scriptObjects.length, 1)
     assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 1)
     assert.equal(decompiledConvos.scriptObjects[0].script,
@@ -27,11 +31,12 @@ UTT_TEST-CONVO_BOT_1
   })
 
   it('decomplile two simple convo without merge utterances', async function () {
-    const convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_simple_convos.json')))
+    const crawlerResult = {}
+    crawlerResult.convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_simple_convos.json')))
     const driver = new BotDriver()
     const compiler = driver.BuildCompiler()
     const decompiledConvos = await new ConvoHandler(compiler)
-      .decompileConvos({ convos, mergeUtterances: false })
+      .decompileConvos({ crawlerResult, mergeUtterances: false })
     assert.equal(decompiledConvos.scriptObjects.length, 2)
     assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 1)
     assert.equal(decompiledConvos.scriptObjects[0].script,
@@ -47,11 +52,12 @@ UTT_TEST-CONVO-1_BOT_1
   })
 
   it('decomplile two simple convo with merge utterances', async function () {
-    const convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_simple_convos.json')))
+    const crawlerResult = {}
+    crawlerResult.convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_simple_convos.json')))
     const driver = new BotDriver()
     const compiler = driver.BuildCompiler()
     const decompiledConvos = await new ConvoHandler(compiler)
-      .decompileConvos({ convos, mergeUtterances: true })
+      .decompileConvos({ crawlerResult, mergeUtterances: true })
     assert.equal(decompiledConvos.scriptObjects.length, 2)
     assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 0)
     assert.equal(decompiledConvos.scriptObjects[0].script,
@@ -67,11 +73,12 @@ UTT_M1_BOTTEXT_BOT
   })
 
   it('decomplile two complex convo with merge utterances', async function () {
-    const convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_complex_convos.json')))
+    const crawlerResult = {}
+    crawlerResult.convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'two_complex_convos.json')))
     const driver = new BotDriver()
     const compiler = driver.BuildCompiler()
     const decompiledConvos = await new ConvoHandler(compiler)
-      .decompileConvos({ convos, mergeUtterances: true })
+      .decompileConvos({ crawlerResult, mergeUtterances: true })
     assert.equal(decompiledConvos.scriptObjects.length, 2)
     assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 0)
     assert.equal(decompiledConvos.scriptObjects[0].script,

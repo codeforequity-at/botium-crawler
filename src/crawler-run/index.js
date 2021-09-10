@@ -39,10 +39,14 @@ const handler = async (argv) => {
     }
 
     const crawler = new Crawler({ driver }, _askUserHandler, _validator)
-    const convos = await crawler.crawl(Object.assign(params, { userAnswers: userFeedbacks }))
+    const crawlerResult = await crawler.crawl(Object.assign(params, { userAnswers: userFeedbacks }))
+
+    if (crawlerResult.err) {
+      console.log('Crawler finished with error: ', crawlerResult.err)
+    }
 
     console.log('Saving testcases...')
-    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances: params.mergeUtterances })
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ crawlerResult, mergeUtterances: params.mergeUtterances })
     _persistScriptsInFiles(decompiledConvos)
     console.log('Crawler finished successfully')
   } catch (e) {

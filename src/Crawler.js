@@ -38,32 +38,41 @@ module.exports = class Crawler {
       endOfConversations: ${JSON.stringify(endOfConversations)}`
     )
 
-    if (!Array.isArray(entryPoints)) {
-      debug('The entryPoints param has to be an array of strings')
-      return this.convos
-    }
-    this.userAnswers = userAnswers
-    this.endOfConversations = endOfConversations
-
-    const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
-    if (entryPoints.length === 0) {
-      entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
-    }
-
-    let hasWelcomeAndEntryPoint = false
-    if (entryPoints.length > 0 && welcomeMessageEntryPoint && welcomeMessageEntryPoint.length > 0) {
-      hasWelcomeAndEntryPoint = true
-    }
-
-    this.depth = depth
-    this.exitCriteria = exitCriteria
+    const result = {}
     let entryPointId = 0
-    await Promise.all(entryPoints.map(async (entryPointText) => {
-      return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
-    }))
+    try {
+      if (!Array.isArray(entryPoints)) {
+        debug('The entryPoints param has to be an array of strings')
+        return this.convos
+      }
+      this.userAnswers = userAnswers
+      this.endOfConversations = endOfConversations
 
-    debug('Crawler finished')
-    return this.convos
+      const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
+      if (entryPoints.length === 0) {
+        entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
+      }
+
+      let hasWelcomeAndEntryPoint = false
+      if (entryPoints.length > 0 && welcomeMessageEntryPoint && welcomeMessageEntryPoint.length > 0) {
+        hasWelcomeAndEntryPoint = true
+      }
+
+      this.depth = depth
+      this.exitCriteria = exitCriteria
+      await Promise.all(entryPoints.map(async (entryPointText) => {
+        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
+      }))
+    } catch (e) {
+      result.err = e.message
+      debug('Crawler finished with error: ', e)
+    }
+
+    if (!result.err) {
+      debug('Crawler finished successful')
+    }
+    result.convos = this.convos
+    return result
   }
 
   async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
@@ -310,7 +319,7 @@ module.exports = class Crawler {
       } catch (err) {
         debug(`Conversation Clean failed: ${err}`)
       }
-      throw err
+      throw new Error(`Failed to start new conversation: ${err.message}`)
     }
   }
 
