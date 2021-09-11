@@ -1,7 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 const slugify = require('slugify')
-const debug = require('debug')
+const debugEnable = require('debug')
+const debug = require('debug')('botium-crawler-crawler-run')
 const { Capabilities, BotDriver } = require('botium-core')
 const { askUserFeedbackOnConsole } = require('../util')
 const Crawler = require('../Crawler')
@@ -24,7 +25,7 @@ const handler = async (argv) => {
   compiler = driver.BuildCompiler()
 
   try {
-    console.log('Crawler started...')
+    debug('Crawler started...')
     const scriptOutput = path.join(output, SCRIPTS_OUTPUT_DIR)
     if (fs.existsSync(scriptOutput) && fs.readdirSync(scriptOutput).length > 0) {
       throw new Error(`The output path '${scriptOutput}' has to be empty`)
@@ -39,12 +40,16 @@ const handler = async (argv) => {
     }
 
     const crawler = new Crawler({ driver }, _askUserHandler, _validator)
-    const convos = await crawler.crawl(Object.assign(params, { userAnswers: userFeedbacks }))
+    const crawlerResult = await crawler.crawl(Object.assign(params, { userAnswers: userFeedbacks }))
 
-    console.log('Saving testcases...')
-    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos, mergeUtterances: params.mergeUtterances })
+    if (crawlerResult.err) {
+      debug('Crawler finished with error: ', crawlerResult.err)
+    }
+
+    debug('Saving testcases...')
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ crawlerResult, mergeUtterances: params.mergeUtterances })
     _persistScriptsInFiles(decompiledConvos)
-    console.log('Crawler finished successfully')
+    debug('Crawler finished successfully')
   } catch (e) {
     console.error('Botium-Crawler failed: ', e)
   }
@@ -82,7 +87,7 @@ const _getAndStoreParams = (argv) => {
   }
 
   if (argv.verbose) {
-    debug.enable('botium-*')
+    debugEnable.enable('botium-*')
   }
 
   if (argv.storeParams) {
@@ -106,7 +111,7 @@ const _persistScriptsInFiles = ({ scriptObjects, generalUtterances }) => {
         script.substring(0, script.indexOf(compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase() +
       '.convo.txt')
     fs.writeFileSync(scriptName, script)
-    console.log(`The '${scriptName}' file is persisted`)
+    debug(`The '${scriptName}' file is persisted`)
 
     scriptObject.botUtterances.forEach((utterance) => {
       const utteranceName = path.join(scriptOutDir, utterance.name)
@@ -133,7 +138,7 @@ const _validator = (botAnswers, userMessage) => {
   for (const incomprehensionItem of incomprehension) {
     for (const botAnswer of botAnswers) {
       if (compiler.Match(botAnswer, incomprehensionItem)) {
-        console.log('User message is failure to understand by the bot', {
+        debug('User message is failure to understand by the bot', {
           userMessage,
           botAnswer
         })

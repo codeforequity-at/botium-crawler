@@ -11,9 +11,9 @@ module.exports = class ConvoHandler {
     this.compiler = compiler
   }
 
-  async decompileConvos ({ convos, mergeUtterances = true }) {
+  async decompileConvos ({ crawlerResult, mergeUtterances = true }) {
     debug('Decompile convos')
-    const flatConvos = _.flatten(convos)
+    const flatConvos = _.flatten(crawlerResult.convos)
     let scriptObjects = await Promise.all(
       flatConvos.map(async (convo) => {
         return this._getConversationScripts(convo)
@@ -25,6 +25,7 @@ module.exports = class ConvoHandler {
       scriptObjects = this._replaceUttReferencesInScriptObject(generalUtterances, scriptObjects)
     }
     return {
+      err: crawlerResult.err,
       scriptObjects,
       generalUtterances
     }

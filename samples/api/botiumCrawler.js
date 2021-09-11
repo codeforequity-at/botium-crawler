@@ -15,9 +15,13 @@ const run = async () => {
     compiler = driver.BuildCompiler()
 
     const crawler = new Crawler({ driver }, _askUserHandler)
-    const convos = await crawler.crawl({ entryPoints: ['buttons'] })
+    const crawlerResult = await crawler.crawl({ entryPoints: ['buttons'] })
 
-    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ convos })
+    if (crawlerResult.err) {
+      console.log('Crawler finished with error: ', crawlerResult.err)
+    }
+
+    const decompiledConvos = await new ConvoHandler(compiler).decompileConvos({ crawlerResult })
     _logDecompiledConvosOnColsole(decompiledConvos)
   } catch (e) {
     console.log('Botium-Crawler failed: ', e)
