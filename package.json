@@ -1,6 +1,6 @@
 {
   "name": "botium-crawler",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "engines": {
     "node": ">=10"
   },
@@ -27,13 +27,13 @@
     "botium-core": "*"
   },
   "dependencies": {
-    "debug": "^4.1.1",
+    "debug": "^4.3.2",
     "flat": "^5.0.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "readline-sync": "^1.4.10",
     "slugify": "^1.4.4",
     "url-regex-safe": "^2.0.2",
-    "yargs": "^15.4.1"
+    "yargs": "^17.1.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
