@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const urlRegex = require('url-regex-safe')
 const debug = require('debug')('botium-crawler-crawler')
+const debugProgress = require('debug')('botium-crawler-progress')
 const { BotDriver } = require('botium-core')
 const { getAllValuesByKeyFromObjects } = require('./util')
 
@@ -25,10 +26,11 @@ module.exports = class Crawler {
     this.stuckConversations = []
     this.userAnswers = []
     this.endOfConversations = []
+    this.convoCount = 0
   }
 
   async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [], endOfConversations = [] }) {
-    debug(`A crawler started with the following params:
+    debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
@@ -65,11 +67,11 @@ module.exports = class Crawler {
       }))
     } catch (e) {
       result.err = e.message
-      debug('Crawler finished with error: ', e)
+      debugProgress('Crawler finished with error: ', e)
     }
 
     if (!result.err) {
-      debug('Crawler finished successful')
+      debugProgress('Crawler finished successful')
     }
     result.convos = this.convos
     return result
@@ -348,6 +350,8 @@ module.exports = class Crawler {
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
     debug(`Conversation finished on '${path} path'`)
+    this.convoCount++
+    debugProgress(`${this.convoCount} conversation is detected so far`)
   }
 
   _getPrefix (elements, pathElementIndex, pathElements, prefix) {
