@@ -68,7 +68,17 @@ module.exports = class ConvoHandler {
     const scriptDecompiled = this.compiler.Decompile([convo], SCRIPTING_FORMAT)
     debug(`Decompiled script: ${scriptDecompiled}`)
 
-    return { name: convo.header.name, script: scriptDecompiled, stucked: convo.stucked, markedWithEndOfConversation: convo.markedWithEndOfConversation, path: convo.path, botUtterances: utterances.bot, meUtterances: utterances.me, err: convo.err }
+    return {
+      name: convo.header.name,
+      script: scriptDecompiled,
+      stucked: convo.stucked,
+      markedWithEndOfConversation: convo.markedWithEndOfConversation,
+      circleFound: convo.circleFound,
+      path: convo.path,
+      botUtterances: utterances.bot,
+      meUtterances: utterances.me,
+      err: convo.err
+    }
   }
 
   _getGeneralUtterances (scriptObjects) {

@@ -69,6 +69,9 @@ const _getAndStoreParams = (argv) => {
   const mergeUtterances = argv.mergeUtterances !== undefined
     ? argv.mergeUtterances : storedParams.mergeUtterances !== undefined
       ? storedParams.mergeUtterances : true
+  const detectCircles = argv.detectCircles !== undefined
+    ? argv.detectCircles : storedParams.detectCircles !== undefined
+      ? storedParams.detectCircles : true
 
   const params = {
     recycleUserFeedback,
@@ -80,7 +83,8 @@ const _getAndStoreParams = (argv) => {
     depth: argv.depth || storedParams.depth || 5,
     exitCriteria: argv.exitCriteria || storedParams.exitCriteria || [],
     mergeUtterances,
-    waitForPrompt: argv.waitForPrompt || storedParams.waitForPrompt || 100
+    waitForPrompt: argv.waitForPrompt || storedParams.waitForPrompt || 100,
+    detectCircles
   }
   if (params.config) {
     process.env.BOTIUM_CONFIG = params.config
@@ -209,6 +213,10 @@ module.exports = {
     yargs.option('waitForPrompt', {
       describe: 'Milliseconds to wait for the bot to present the response. (default: 100)',
       type: 'number'
+    })
+    yargs.option('detectCircles', {
+      describe: 'Detect circles in conversations and stop the current conversation at that point. (default: true)',
+      type: 'boolean'
     })
     yargs.option('storeParams', {
       describe: 'Store all CLI parameters in \'./botium-crawler.json\' file and ' +

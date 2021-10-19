@@ -1,9 +1,10 @@
+const crypto = require('crypto')
 const _ = require('lodash')
 const urlRegex = require('url-regex-safe')
 const debug = require('debug')('botium-crawler-crawler')
 const debugProgress = require('debug')('botium-crawler-progress')
 const { BotDriver } = require('botium-core')
-const { getAllValuesByKeyFromObjects } = require('./util')
+const { getAllValuesByKeyFromObjects, startContainer, stopContainer } = require('./util')
 
 const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
 const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
@@ -26,10 +27,14 @@ module.exports = class Crawler {
     this.stuckConversations = []
     this.userAnswers = []
     this.endOfConversations = []
+    this.convoStepsHash = []
     this.convoCount = 0
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [], endOfConversations = [] }) {
+  async crawl ({
+    entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [],
+    waitForPrompt = null, userAnswers = [], endOfConversations = [], detectCircles = true
+  }) {
     debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
@@ -37,7 +42,8 @@ module.exports = class Crawler {
       exitCriteria: ${JSON.stringify(exitCriteria)},
       waitForPrompt: ${waitForPrompt},
       userAnswers: ${JSON.stringify(userAnswers, 0, 2)},
-      endOfConversations: ${JSON.stringify(endOfConversations)}`
+      endOfConversations: ${JSON.stringify(endOfConversations)},
+      detectCircles: ${detectCircles},`
     )
 
     const result = {}
@@ -63,7 +69,7 @@ module.exports = class Crawler {
       this.depth = depth
       this.exitCriteria = exitCriteria
       await Promise.all(entryPoints.map(async (entryPointText) => {
-        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
+        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt, detectCircles)
       }))
     } catch (e) {
       result.err = e.message
@@ -77,7 +83,7 @@ module.exports = class Crawler {
     return result
   }
 
-  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
+  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt, detectCircles) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -85,6 +91,9 @@ module.exports = class Crawler {
     this.convos[entryPointId] = []
     this.visitedPath[entryPointId] = []
     this.stuckConversations[entryPointId] = []
+    if (detectCircles) {
+      this.convoStepsHash[entryPointId] = []
+    }
     let firstTry = true
 
     while (firstTry || this.stuckConversations[entryPointId].length > 0) {
@@ -108,13 +117,14 @@ module.exports = class Crawler {
 
       while (!this.visitedPath[entryPointId].includes(path) &&
       !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === path)) {
-        await this._start(entryPointId)
+        this.containers[entryPointId] = await startContainer(this.driver)
         const params = {
           numberOfWelcomeMessages,
           depth: 1,
           path,
           entryPointId,
           waitForPrompt,
+          detectCircles,
           tempConvo: {
             header: {
               name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
@@ -131,12 +141,12 @@ module.exports = class Crawler {
           }
         }
         await this._makeConversation(params)
-        await this._stop(entryPointId)
+        await stopContainer(this.containers[entryPointId])
       }
     }
   }
 
-  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo }) {
+  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, detectCircles, tempConvo }) {
     try {
       const botAnswers = []
       if (userMessage) {
@@ -183,6 +193,22 @@ module.exports = class Crawler {
         this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
         return true
+      }
+
+      if (detectCircles) {
+        for (const botAnswer of botAnswers) {
+          const pureBotAnswer = Object.assign({}, botAnswer)
+          delete pureBotAnswer.sourceData
+          const botAnswerHash = crypto.createHash('md5').update(JSON.stringify(pureBotAnswer)).digest('hex')
+          if (this.convoStepsHash[entryPointId].includes(botAnswerHash)) {
+            tempConvo.stucked = true
+            tempConvo.circleFound = true
+            this._finishConversation(tempConvo, entryPointId, path)
+            debug(`Conversation end on '${path}' path, because a circle found`)
+            return true
+          }
+          this.convoStepsHash[entryPointId].push(botAnswerHash)
+        }
       }
 
       const requests = await this._getRequests(botAnswers, path)
@@ -303,45 +329,8 @@ module.exports = class Crawler {
     }
   }
 
-  async _start (entryPointId) {
-    const myContainer = await this.driver.Build()
-    debug('Conversation container built, now starting')
-    try {
-      await myContainer.Start()
-      debug('Conversation container started.')
-      this.containers[entryPointId] = myContainer
-    } catch (err) {
-      try {
-        await myContainer.Stop()
-      } catch (err) {
-        debug(`Conversation Stop failed: ${err}`)
-      }
-      try {
-        await myContainer.Clean()
-      } catch (err) {
-        debug(`Conversation Clean failed: ${err}`)
-      }
-      throw new Error(`Failed to start new conversation: ${err.message}`)
-    }
-  }
-
-  async _stop (entryPointId) {
-    if (this.containers[entryPointId]) {
-      try {
-        await this.containers[entryPointId].Stop()
-      } catch (err) {
-        debug(`Conversation Stop failed: ${err}`)
-      }
-      try {
-        await this.containers[entryPointId].Clean()
-      } catch (err) {
-        debug(`Conversation Clean failed: ${err}`)
-      }
-    }
-    debug('Conversation container stopped.')
-  }
-
   _finishConversation (tempConvo, entryPointId, path) {
+    this.convoStepsHash[entryPointId] = []
     const pathElements = path.split(PATH_SEPARATOR)
     const prefix = this._getPrefix(this.pathTree, 0, pathElements)
 
@@ -377,7 +366,7 @@ module.exports = class Crawler {
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {
     let welcomeMessageEntryPoint
-    await this._start(entryPointId)
+    this.containers[entryPointId] = await startContainer(this.driver)
     if (numberOfWelcomeMessages > 0) {
       for (let i = 0; i < numberOfWelcomeMessages; i++) {
         try {
@@ -411,7 +400,7 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       }
     }
     debug('Number of welcome messages validation is successfully ended')
-    await this._stop(entryPointId)
+    await stopContainer(this.containers[entryPointId])
     return welcomeMessageEntryPoint
   }
 
