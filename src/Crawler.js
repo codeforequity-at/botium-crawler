@@ -301,7 +301,8 @@ module.exports = class Crawler {
           path: requestPath,
           entryPointId,
           waitForPrompt,
-          tempConvo
+          tempConvo,
+          detectCircles
         }
         const allChildVisited = await this._makeConversation(params)
         if (pathVisited && allChildVisited && !hasStuckedRequest) {
@@ -314,10 +315,12 @@ module.exports = class Crawler {
 
       if (hasStuckedRequest) {
         this.stuckConversations[entryPointId].push({ path })
+        this.convoStepsHash[entryPointId] = []
         debug(`Stuck conversation on '${path}' path`)
         return false
       } else {
         this.visitedPath[entryPointId].push(path)
+        this.convoStepsHash[entryPointId] = []
         debug(`The '${path}' path is visited`)
         return true
       }
