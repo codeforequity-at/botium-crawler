@@ -11,16 +11,16 @@ module.exports = class ConvoHandler {
     this.compiler = compiler
   }
 
-  async decompileConvos ({ crawlerResult, mergeUtterances = true }) {
+  async decompileConvos ({ crawlerResult, generateUtterances = true, mergeUtterances = true }) {
     debug('Decompile convos')
     const flatConvos = _.flatten(crawlerResult.convos)
     let scriptObjects = await Promise.all(
       flatConvos.map(async (convo) => {
-        return this._getConversationScripts(convo)
+        return this._getConversationScripts(convo, generateUtterances)
       })
     )
     const generalUtterances = []
-    if (mergeUtterances) {
+    if (generateUtterances && mergeUtterances) {
       generalUtterances.push(...this._getGeneralUtterances(scriptObjects))
       scriptObjects = this._replaceUttReferencesInScriptObject(generalUtterances, scriptObjects)
     }
@@ -31,7 +31,7 @@ module.exports = class ConvoHandler {
     }
   }
 
-  async _getConversationScripts (convo) {
+  async _getConversationScripts (convo, generateUtterances) {
     const utterances = {
       bot: [],
       me: []
@@ -46,17 +46,19 @@ module.exports = class ConvoHandler {
           statistics.multirow++
         } else {
           if (step.sender === 'bot' || (step.sender === 'me' && step.userFeedback)) {
-            const utteranceName = slugify(`UTT_${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
-            const utteranceValue = step.messageText
-            step.messageText = utteranceName
+            if (generateUtterances) {
+              const utteranceName = slugify(`UTT_${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
+              const utteranceValue = step.messageText
+              step.messageText = utteranceName
 
-            utterances[step.sender].push({
-              script: utteranceName + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] + utteranceValue,
-              name: utteranceName
-            })
+              utterances[step.sender].push({
+                script: utteranceName + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] + utteranceValue,
+                name: utteranceName
+              })
 
+              statistics.utterances.push(utteranceName)
+            }
             statistics[step.sender]++
-            statistics.utterances.push(utteranceName)
           } else {
             statistics.filteredOut++
           }

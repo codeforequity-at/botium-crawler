@@ -6,7 +6,31 @@ const { BotDriver } = require('botium-core')
 const CONVOS_DIR = 'convos'
 
 describe('ConvoHandler test', function () {
-  it('decompile one simple convo', async function () {
+  it('decompile one simple convo without utterances', async function () {
+    const crawlerResult = {
+      err: 'error'
+    }
+    crawlerResult.convos = JSON.parse(fs.readFileSync(path.resolve(__dirname, CONVOS_DIR, 'one_simple_convo.json')))
+    const driver = new BotDriver()
+    const compiler = driver.BuildCompiler()
+    const decompiledConvos = await new ConvoHandler(compiler)
+      .decompileConvos({ crawlerResult, generateUtterances: false, mergeUtterances: false })
+    assert.equal(decompiledConvos.err, 'error')
+    assert.equal(decompiledConvos.scriptObjects.length, 1)
+    assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 0)
+    assert.equal(decompiledConvos.scriptObjects[0].script,
+      `test convo
+
+#me
+meText
+
+#bot
+botText
+`
+    )
+  })
+
+  it('decompile one simple convo with utterances', async function () {
     const crawlerResult = {
       err: 'error'
     }
