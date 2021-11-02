@@ -27,13 +27,13 @@ module.exports = class Crawler {
     this.stuckConversations = []
     this.userAnswers = []
     this.endOfConversations = []
-    this.convoStepsHash = []
+    this.convoDialogsHash = []
     this.convoCount = 0
   }
 
   async crawl ({
     entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [],
-    waitForPrompt = null, userAnswers = [], endOfConversations = [], detectCircles = true
+    waitForPrompt = null, userAnswers = [], endOfConversations = []
   }) {
     debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
@@ -42,8 +42,7 @@ module.exports = class Crawler {
       exitCriteria: ${JSON.stringify(exitCriteria)},
       waitForPrompt: ${waitForPrompt},
       userAnswers: ${JSON.stringify(userAnswers, 0, 2)},
-      endOfConversations: ${JSON.stringify(endOfConversations)},
-      detectCircles: ${detectCircles},`
+      endOfConversations: ${JSON.stringify(endOfConversations)}`
     )
 
     const result = {}
@@ -69,7 +68,7 @@ module.exports = class Crawler {
       this.depth = depth
       this.exitCriteria = exitCriteria
       await Promise.all(entryPoints.map(async (entryPointText) => {
-        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt, detectCircles)
+        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
       }))
     } catch (e) {
       result.err = e.message
@@ -83,7 +82,7 @@ module.exports = class Crawler {
     return result
   }
 
-  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt, detectCircles) {
+  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -91,9 +90,7 @@ module.exports = class Crawler {
     this.convos[entryPointId] = []
     this.visitedPath[entryPointId] = []
     this.stuckConversations[entryPointId] = []
-    if (detectCircles) {
-      this.convoStepsHash[entryPointId] = []
-    }
+    this.convoDialogsHash[entryPointId] = []
     let firstTry = true
 
     while (firstTry || this.stuckConversations[entryPointId].length > 0) {
@@ -124,7 +121,6 @@ module.exports = class Crawler {
           path,
           entryPointId,
           waitForPrompt,
-          detectCircles,
           tempConvo: {
             header: {
               name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
@@ -146,7 +142,7 @@ module.exports = class Crawler {
     }
   }
 
-  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, detectCircles, tempConvo }) {
+  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo }) {
     try {
       const botAnswers = []
       if (userMessage) {
@@ -195,21 +191,27 @@ module.exports = class Crawler {
         return true
       }
 
-      if (detectCircles) {
-        for (const botAnswer of botAnswers) {
-          const pureBotAnswer = Object.assign({}, botAnswer)
-          delete pureBotAnswer.sourceData
-          const botAnswerHash = crypto.createHash('md5').update(JSON.stringify(pureBotAnswer)).digest('hex')
-          if (this.convoStepsHash[entryPointId].includes(botAnswerHash)) {
-            tempConvo.stucked = true
-            tempConvo.circleFound = true
-            this._finishConversation(tempConvo, entryPointId, path)
-            debug(`Conversation end on '${path}' path, because a circle found`)
-            return true
-          }
-          this.convoStepsHash[entryPointId].push(botAnswerHash)
-        }
+      const convoDialog = {
+        botMessages: []
       }
+      if (userMessage) {
+        convoDialog.userMessage = userMessage
+      }
+      for (const botAnswer of botAnswers) {
+        const pureBotAnswer = Object.assign({}, botAnswer)
+        delete pureBotAnswer.sourceData
+        convoDialog.botMessages.push(pureBotAnswer)
+      }
+
+      const convoDialogHash = crypto.createHash('md5').update(JSON.stringify(convoDialog)).digest('hex')
+      if (this.convoDialogsHash[entryPointId].includes(convoDialogHash)) {
+        tempConvo.stucked = true
+        tempConvo.circleFound = true
+        this._finishConversation(tempConvo, entryPointId, path)
+        debug(`Conversation end on '${path}' path, because a circle found`)
+        return true
+      }
+      this.convoDialogsHash[entryPointId].push(convoDialogHash)
 
       const requests = await this._getRequests(botAnswers, path)
       if (requests.length === 0 && !this.visitedPath[entryPointId].includes(path)) {
@@ -301,8 +303,7 @@ module.exports = class Crawler {
           path: requestPath,
           entryPointId,
           waitForPrompt,
-          tempConvo,
-          detectCircles
+          tempConvo
         }
         const allChildVisited = await this._makeConversation(params)
         if (pathVisited && allChildVisited && !hasStuckedRequest) {
@@ -315,12 +316,12 @@ module.exports = class Crawler {
 
       if (hasStuckedRequest) {
         this.stuckConversations[entryPointId].push({ path })
-        this.convoStepsHash[entryPointId] = []
+        this.convoDialogsHash[entryPointId] = []
         debug(`Stuck conversation on '${path}' path`)
         return false
       } else {
         this.visitedPath[entryPointId].push(path)
-        this.convoStepsHash[entryPointId] = []
+        this.convoDialogsHash[entryPointId] = []
         debug(`The '${path}' path is visited`)
         return true
       }
@@ -333,7 +334,7 @@ module.exports = class Crawler {
   }
 
   _finishConversation (tempConvo, entryPointId, path) {
-    this.convoStepsHash[entryPointId] = []
+    this.convoDialogsHash[entryPointId] = []
     const pathElements = path.split(PATH_SEPARATOR)
     const prefix = this._getPrefix(this.pathTree, 0, pathElements)
 
