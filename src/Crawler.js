@@ -195,7 +195,9 @@ module.exports = class Crawler {
         botMessages: []
       }
       if (userMessage) {
-        convoDialog.userMessage = userMessage
+        const pureUserMessage = Object.assign({}, userMessage)
+        delete pureUserMessage.sourceData
+        convoDialog.userMessage = pureUserMessage
       }
       for (const botAnswer of botAnswers) {
         const pureBotAnswer = Object.assign({}, botAnswer)
