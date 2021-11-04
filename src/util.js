@@ -3,9 +3,48 @@ const path = require('path')
 const readlineSync = require('readline-sync')
 const flatten = require('flat')
 const _ = require('lodash')
+const debug = require('debug')('botium-crawler-util')
 
 const SOURCE_DATA = 'sourceData'
 const BUTTONS = 'buttons'
+
+const startContainer = async (driver) => {
+  const container = await driver.Build()
+  debug('Conversation container built, now starting')
+  try {
+    await container.Start()
+    debug('Conversation container started.')
+    return container
+  } catch (err) {
+    try {
+      await container.Stop()
+    } catch (err) {
+      debug(`Conversation Stop failed: ${err}`)
+    }
+    try {
+      await container.Clean()
+    } catch (err) {
+      debug(`Conversation Clean failed: ${err}`)
+    }
+    throw new Error(`Failed to start new conversation: ${err.message}`)
+  }
+}
+
+const stopContainer = async (container) => {
+  if (container) {
+    try {
+      await container.Stop()
+    } catch (err) {
+      debug(`Conversation Stop failed: ${err}`)
+    }
+    try {
+      await container.Clean()
+    } catch (err) {
+      debug(`Conversation Clean failed: ${err}`)
+    }
+  }
+  debug('Conversation container stopped.')
+}
 
 const getAllValuesByKeyFromObjects = (objects, key = BUTTONS, exceptUnder = SOURCE_DATA) => {
   const values = []
@@ -120,6 +159,8 @@ const askUserFeedbackOnConsole = async (stuckConversations, compiler, recycleUse
 }
 
 module.exports = {
+  startContainer,
+  stopContainer,
   getAllValuesByKeyFromObject,
   getAllValuesByKeyFromObjects,
   askUserFeedbackOnConsole

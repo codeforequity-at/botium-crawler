@@ -1,8 +1,10 @@
+const crypto = require('crypto')
 const _ = require('lodash')
 const urlRegex = require('url-regex-safe')
 const debug = require('debug')('botium-crawler-crawler')
+const debugProgress = require('debug')('botium-crawler-progress')
 const { BotDriver } = require('botium-core')
-const { getAllValuesByKeyFromObjects } = require('./util')
+const { getAllValuesByKeyFromObjects, startContainer, stopContainer } = require('./util')
 
 const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
 const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
@@ -25,10 +27,15 @@ module.exports = class Crawler {
     this.stuckConversations = []
     this.userAnswers = []
     this.endOfConversations = []
+    this.convoDialogsHash = []
+    this.convoCount = 0
   }
 
-  async crawl ({ entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], waitForPrompt = null, userAnswers = [], endOfConversations = [] }) {
-    debug(`A crawler started with the following params:
+  async crawl ({
+    entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [],
+    waitForPrompt = null, userAnswers = [], endOfConversations = []
+  }) {
+    debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
@@ -65,11 +72,11 @@ module.exports = class Crawler {
       }))
     } catch (e) {
       result.err = e.message
-      debug('Crawler finished with error: ', e)
+      debugProgress('Crawler finished with error: ', e)
     }
 
     if (!result.err) {
-      debug('Crawler finished successful')
+      debugProgress('Crawler finished successful')
     }
     result.convos = this.convos
     return result
@@ -83,6 +90,7 @@ module.exports = class Crawler {
     this.convos[entryPointId] = []
     this.visitedPath[entryPointId] = []
     this.stuckConversations[entryPointId] = []
+    this.convoDialogsHash[entryPointId] = []
     let firstTry = true
 
     while (firstTry || this.stuckConversations[entryPointId].length > 0) {
@@ -106,7 +114,7 @@ module.exports = class Crawler {
 
       while (!this.visitedPath[entryPointId].includes(path) &&
       !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === path)) {
-        await this._start(entryPointId)
+        this.containers[entryPointId] = await startContainer(this.driver)
         const params = {
           numberOfWelcomeMessages,
           depth: 1,
@@ -129,7 +137,7 @@ module.exports = class Crawler {
           }
         }
         await this._makeConversation(params)
-        await this._stop(entryPointId)
+        await stopContainer(this.containers[entryPointId])
       }
     }
   }
@@ -182,6 +190,30 @@ module.exports = class Crawler {
         debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
         return true
       }
+
+      const convoDialog = {
+        botMessages: []
+      }
+      if (userMessage) {
+        const pureUserMessage = Object.assign({}, userMessage)
+        delete pureUserMessage.sourceData
+        convoDialog.userMessage = pureUserMessage
+      }
+      for (const botAnswer of botAnswers) {
+        const pureBotAnswer = Object.assign({}, botAnswer)
+        delete pureBotAnswer.sourceData
+        convoDialog.botMessages.push(pureBotAnswer)
+      }
+
+      const convoDialogHash = crypto.createHash('md5').update(JSON.stringify(convoDialog)).digest('hex')
+      if (this.convoDialogsHash[entryPointId].includes(convoDialogHash)) {
+        tempConvo.stucked = true
+        tempConvo.circleFound = true
+        this._finishConversation(tempConvo, entryPointId, path)
+        debug(`Conversation end on '${path}' path, because a circle found`)
+        return true
+      }
+      this.convoDialogsHash[entryPointId].push(convoDialogHash)
 
       const requests = await this._getRequests(botAnswers, path)
       if (requests.length === 0 && !this.visitedPath[entryPointId].includes(path)) {
@@ -286,10 +318,12 @@ module.exports = class Crawler {
 
       if (hasStuckedRequest) {
         this.stuckConversations[entryPointId].push({ path })
+        this.convoDialogsHash[entryPointId] = []
         debug(`Stuck conversation on '${path}' path`)
         return false
       } else {
         this.visitedPath[entryPointId].push(path)
+        this.convoDialogsHash[entryPointId] = []
         debug(`The '${path}' path is visited`)
         return true
       }
@@ -301,45 +335,8 @@ module.exports = class Crawler {
     }
   }
 
-  async _start (entryPointId) {
-    const myContainer = await this.driver.Build()
-    debug('Conversation container built, now starting')
-    try {
-      await myContainer.Start()
-      debug('Conversation container started.')
-      this.containers[entryPointId] = myContainer
-    } catch (err) {
-      try {
-        await myContainer.Stop()
-      } catch (err) {
-        debug(`Conversation Stop failed: ${err}`)
-      }
-      try {
-        await myContainer.Clean()
-      } catch (err) {
-        debug(`Conversation Clean failed: ${err}`)
-      }
-      throw new Error(`Failed to start new conversation: ${err.message}`)
-    }
-  }
-
-  async _stop (entryPointId) {
-    if (this.containers[entryPointId]) {
-      try {
-        await this.containers[entryPointId].Stop()
-      } catch (err) {
-        debug(`Conversation Stop failed: ${err}`)
-      }
-      try {
-        await this.containers[entryPointId].Clean()
-      } catch (err) {
-        debug(`Conversation Clean failed: ${err}`)
-      }
-    }
-    debug('Conversation container stopped.')
-  }
-
   _finishConversation (tempConvo, entryPointId, path) {
+    this.convoDialogsHash[entryPointId] = []
     const pathElements = path.split(PATH_SEPARATOR)
     const prefix = this._getPrefix(this.pathTree, 0, pathElements)
 
@@ -348,6 +345,8 @@ module.exports = class Crawler {
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
     debug(`Conversation finished on '${path} path'`)
+    this.convoCount++
+    debugProgress(`${this.convoCount} conversation is detected so far`)
   }
 
   _getPrefix (elements, pathElementIndex, pathElements, prefix) {
@@ -373,7 +372,7 @@ module.exports = class Crawler {
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {
     let welcomeMessageEntryPoint
-    await this._start(entryPointId)
+    this.containers[entryPointId] = await startContainer(this.driver)
     if (numberOfWelcomeMessages > 0) {
       for (let i = 0; i < numberOfWelcomeMessages; i++) {
         try {
@@ -407,7 +406,7 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       }
     }
     debug('Number of welcome messages validation is successfully ended')
-    await this._stop(entryPointId)
+    await stopContainer(this.containers[entryPointId])
     return welcomeMessageEntryPoint
   }
 
