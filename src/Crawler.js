@@ -29,11 +29,13 @@ module.exports = class Crawler {
     this.endOfConversations = []
     this.convoDialogsHash = []
     this.convoCount = 0
+    this.lastCrawlConvoNames = {}
+    this.nameCounter = 1
   }
 
   async crawl ({
     entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [],
-    waitForPrompt = null, userAnswers = [], endOfConversations = []
+    waitForPrompt = null, userAnswers = [], endOfConversations = [], lastCrawlConvoNames = {}
   }) {
     debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
@@ -54,6 +56,7 @@ module.exports = class Crawler {
       }
       this.userAnswers = userAnswers
       this.endOfConversations = endOfConversations
+      this.lastCrawlConvoNames = lastCrawlConvoNames
 
       const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
       if (entryPoints.length === 0) {
@@ -337,37 +340,24 @@ module.exports = class Crawler {
 
   _finishConversation (tempConvo, entryPointId, path) {
     this.convoDialogsHash[entryPointId] = []
-    const pathElements = path.split(PATH_SEPARATOR)
-    const prefix = this._getPrefix(this.pathTree, 0, pathElements)
+    const pathHash = crypto.createHash('md5').update(path).digest('hex')
+    const convoName = this.lastCrawlConvoNames[pathHash]
+    if (convoName) {
+      tempConvo.header.name = convoName
+    } else {
+      while (Object.values(this.lastCrawlConvoNames).includes('Convo_' + this.nameCounter)) {
+        this.nameCounter++
+      }
+      tempConvo.header.name = 'Convo_' + this.nameCounter
+      this.nameCounter++
+    }
 
-    tempConvo.header.name = `${prefix}_${tempConvo.header.name}`
     tempConvo.path = path
     this.convos[entryPointId].push(Object.assign({}, tempConvo))
     this.visitedPath[entryPointId].push(path)
     debug(`Conversation finished on '${path} path'`)
     this.convoCount++
     debugProgress(`${this.convoCount} conversation is detected so far`)
-  }
-
-  _getPrefix (elements, pathElementIndex, pathElements, prefix) {
-    const pathElement = pathElements[pathElementIndex]
-    let index = _.findIndex(elements, e => e.name === pathElement)
-    if (index < 0) {
-      elements.push({
-        name: pathElement,
-        children: []
-      })
-      index = elements.length - 1
-    }
-    if (!prefix) {
-      prefix = index + 1
-    } else {
-      prefix = `${prefix}.${index + 1}`
-    }
-    if (pathElements.indexOf(pathElement) >= 0 && pathElements.length > pathElementIndex + 1) {
-      return this._getPrefix(elements[index].children, pathElementIndex + 1, pathElements, prefix)
-    }
-    return prefix
   }
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {

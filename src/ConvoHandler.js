@@ -1,6 +1,6 @@
 const util = require('util')
 const _ = require('lodash')
-const slugify = require('slugify')
+const crypto = require('crypto')
 const debug = require('debug')('botium-crawler-convo-handler')
 const Capabilities = require('botium-core').Capabilities
 
@@ -9,10 +9,14 @@ const SCRIPTING_FORMAT = 'SCRIPTING_FORMAT_TXT'
 module.exports = class ConvoHandler {
   constructor (compiler) {
     this.compiler = compiler
+    this.lastCrawlUtteranceNames = {}
+    this.utteranceNameCounter = 1
+    this.mergedUtteranceNameCounter = 1
   }
 
-  async decompileConvos ({ crawlerResult, generateUtterances = true, mergeUtterances = true }) {
+  async decompileConvos ({ crawlerResult, generateUtterances = true, mergeUtterances = true, lastCrawlUtteranceNames = {} }) {
     debug('Decompile convos')
+    this.lastCrawlUtteranceNames = lastCrawlUtteranceNames
     const flatConvos = _.flatten(crawlerResult.convos)
     let scriptObjects = await Promise.all(
       flatConvos.map(async (convo) => {
@@ -47,7 +51,15 @@ module.exports = class ConvoHandler {
         } else {
           if (step.sender === 'bot' || (step.sender === 'me' && step.userFeedback)) {
             if (generateUtterances) {
-              const utteranceName = slugify(`UTT_${convo.header.name}_${step.sender}_${statistics[step.sender] + 1}`).toUpperCase()
+              const valueHash = crypto.createHash('md5').update(step.messageText).digest('hex')
+              let utteranceName = this.lastCrawlUtteranceNames[valueHash]
+              if (!utteranceName) {
+                while (Object.values(this.lastCrawlUtteranceNames).includes(`Utt_${this.utteranceNameCounter}_${step.sender}`)) {
+                  this.utteranceNameCounter++
+                }
+                utteranceName = `Utt_${this.utteranceNameCounter}_${step.sender}`
+                this.utteranceNameCounter++
+              }
               const utteranceValue = step.messageText
               step.messageText = utteranceName
 
@@ -91,7 +103,7 @@ module.exports = class ConvoHandler {
       meUtterances.push(...scriptObject.meUtterances)
     }
 
-    return [...this._mergeUtterances(botUtterances, 'BOT'), ...this._mergeUtterances(meUtterances, 'ME')]
+    return [...this._mergeUtterances(botUtterances, 'bot'), ...this._mergeUtterances(meUtterances, 'me')]
   }
 
   _mergeUtterances (utterances, suffix) {
@@ -100,7 +112,6 @@ module.exports = class ConvoHandler {
       otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
     ).map(u => ({ ...u }))
 
-    let counter = 1
     for (const mergedUtt of mergedUtterances) {
       mergedUtt.occurances = _.filter(utterances,
         (utt) =>
@@ -109,10 +120,19 @@ module.exports = class ConvoHandler {
         .map((utt) => utt.name)
 
       if (mergedUtt.occurances.length > 1) {
-        const indexOfEol = mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
-        const start = indexOfEol + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL].length
-        mergedUtt.name = `UTT_M${counter++}_${slugify(mergedUtt.script.substring(start, start + 32)).toUpperCase()}_${suffix}`
-        mergedUtt.script = mergedUtt.script.replace(mergedUtt.script.substring(0, indexOfEol), mergedUtt.name)
+        const lines = _.map(mergedUtt.script.split(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]), (line) => line.trim())
+        const hashValue = crypto.createHash('md5').update(lines[1]).digest('hex')
+        if (this.lastCrawlUtteranceNames[hashValue]) {
+          mergedUtt.name = this.lastCrawlUtteranceNames[hashValue]
+        } else {
+          while (Object.values(this.lastCrawlUtteranceNames).includes(`Utt_M_${this.mergedUtteranceNameCounter}_${suffix}`)) {
+            this.mergedUtteranceNameCounter++
+          }
+          mergedUtt.name = `Utt_M_${this.mergedUtteranceNameCounter}_${suffix}`
+          this.mergedUtteranceNameCounter++
+        }
+        lines[0] = mergedUtt.name
+        mergedUtt.script = lines.join(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
       }
     }
 
