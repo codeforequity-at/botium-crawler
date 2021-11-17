@@ -59,13 +59,14 @@ module.exports = class Crawler {
       this.lastCrawlConvoNames = lastCrawlConvoNames
 
       const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
-      if (entryPoints.length === 0) {
-        entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
-      }
 
       let hasWelcomeAndEntryPoint = false
       if (entryPoints.length > 0 && welcomeMessageEntryPoint && welcomeMessageEntryPoint.length > 0) {
         hasWelcomeAndEntryPoint = true
+      }
+
+      if (entryPoints.length === 0) {
+        entryPoints = welcomeMessageEntryPoint || DEFAULT_ENTRY_POINTS
       }
 
       this.depth = depth
