@@ -265,9 +265,6 @@ module.exports = class Crawler {
         const requestPath = request.payload
           ? path + PATH_SEPARATOR + request.text + JSON.stringify(request.payload)
           : path + PATH_SEPARATOR + request.text
-        if (depth === 1) {
-          tempConvo.header.name = `${tempConvo.header.name}_${request.text.substring(0, 16)}`
-        }
 
         if (this.exitCriteria.length > 0) {
           const exit = this.exitCriteria.some((exitCrit) => {
@@ -345,10 +342,10 @@ module.exports = class Crawler {
     if (convoName) {
       tempConvo.header.name = convoName
     } else {
-      while (Object.values(this.lastCrawlConvoNames).includes('Convo_' + this.nameCounter)) {
+      while (Object.values(this.lastCrawlConvoNames).includes(`${tempConvo.header.name}_Convo_${this.nameCounter}`)) {
         this.nameCounter++
       }
-      tempConvo.header.name = 'Convo_' + this.nameCounter
+      tempConvo.header.name = `${tempConvo.header.name}_Convo_${this.nameCounter}`
       this.nameCounter++
     }
 
