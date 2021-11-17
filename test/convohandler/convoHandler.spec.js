@@ -49,7 +49,7 @@ botText
 meText
 
 #bot
-UTT_TEST-CONVO_BOT_1
+Utt_1_bot
 `
     )
   })
@@ -70,7 +70,7 @@ UTT_TEST-CONVO_BOT_1
 meText
 
 #bot
-UTT_TEST-CONVO-1_BOT_1
+Utt_1_bot
 `
     )
   })
@@ -91,7 +91,7 @@ UTT_TEST-CONVO-1_BOT_1
 meText
 
 #bot
-UTT_M1_BOTTEXT_BOT
+Utt_M_1_bot
 `
     )
   })
@@ -112,43 +112,43 @@ UTT_M1_BOTTEXT_BOT
 meText1
 
 #bot
-UTT_M1_BOTTEXT1_BOT
+Utt_M_1_bot
 
 #bot
-UTT_M2_BOTTEXT2_BOT
+Utt_M_2_bot
 
 #bot
-UTT_M3_BOTTEXT3_BOT
+Utt_M_3_bot
 
 #bot
-UTT_M4_BOTTEXT4_BOT
+Utt_M_4_bot
 
 #bot
-UTT_M5_BOTTEXT5_BOT
+Utt_M_5_bot
 
 #me
 meText2
 
 #bot
-UTT_M6_BOTTEXT6_BOT
+Utt_M_6_bot
 
 #bot
-UTT_M7_BOTTEXT7_BOT
+Utt_M_7_bot
 
 #bot
-UTT_M8_BOTTEXT8_BOT
+Utt_M_8_bot
 
 #bot
-UTT_M9_BOTTEXT9_BOT
+Utt_M_9_bot
 
 #bot
-UTT_M10_BOTTEXT10_BOT
+Utt_M_10_bot
 
 #bot
-UTT_M11_BOTTEXT11_BOT
+Utt_M_11_bot
 
 #bot
-UTT_M12_BOTTEXT12_BOT
+Utt_M_12_bot
 `
     )
   })
