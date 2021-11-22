@@ -54,10 +54,10 @@ module.exports = class ConvoHandler {
               const valueHash = crypto.createHash('md5').update(step.messageText).digest('hex')
               let utteranceName = this.lastCrawlUtteranceNames[valueHash]
               if (!utteranceName) {
-                while (Object.values(this.lastCrawlUtteranceNames).includes(`Utt_${this.utteranceNameCounter}_${step.sender}`)) {
+                while (Object.values(this.lastCrawlUtteranceNames).includes(`UTT_${this.utteranceNameCounter}_${step.sender}`)) {
                   this.utteranceNameCounter++
                 }
-                utteranceName = `Utt_${this.utteranceNameCounter}_${step.sender}`
+                utteranceName = `UTT_${this.utteranceNameCounter}_${step.sender}`
                 this.utteranceNameCounter++
               }
               const utteranceValue = step.messageText
@@ -125,10 +125,10 @@ module.exports = class ConvoHandler {
         if (this.lastCrawlUtteranceNames[hashValue]) {
           mergedUtt.name = this.lastCrawlUtteranceNames[hashValue]
         } else {
-          while (Object.values(this.lastCrawlUtteranceNames).includes(`Utt_M_${this.mergedUtteranceNameCounter}_${suffix}`)) {
+          while (Object.values(this.lastCrawlUtteranceNames).includes(`UTT_M_${this.mergedUtteranceNameCounter}_${suffix}`)) {
             this.mergedUtteranceNameCounter++
           }
-          mergedUtt.name = `Utt_M_${this.mergedUtteranceNameCounter}_${suffix}`
+          mergedUtt.name = `UTT_M_${this.mergedUtteranceNameCounter}_${suffix}`
           this.mergedUtteranceNameCounter++
         }
         lines[0] = mergedUtt.name
