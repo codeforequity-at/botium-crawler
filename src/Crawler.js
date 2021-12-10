@@ -1,6 +1,6 @@
 const crypto = require('crypto')
 const _ = require('lodash')
-const urlRegex = require('url-regex-safe')
+const isUrl = require('is-url')
 const debug = require('debug')('botium-crawler-crawler')
 const debugProgress = require('debug')('botium-crawler-progress')
 const { BotDriver } = require('botium-core')
@@ -407,6 +407,6 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
     }
     return _.filter(requests, request => !request.payload ||
         (request.payload && _.isObject(request.payload)) ||
-        (request.payload && _.isString(request.payload) && !urlRegex({ exact: true, strict: false }).test(request.payload)))
+        (request.payload && _.isString(request.payload) && !isUrl(request.payload)))
   }
 }

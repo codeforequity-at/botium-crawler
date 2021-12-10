@@ -1,0 +1,56 @@
+{
+  "botium": {
+    "Capabilities": {
+      "RETRY_USERSAYS_ONERROR_REGEXP": [],
+      "RETRY_USERSAYS_NUMRETRIES": null,
+      "RETRY_USERSAYS_FACTOR": null,
+      "RETRY_USERSAYS_MINTIMEOUT": null,
+      "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
+      "WAITFORBOTTIMEOUT": 100,
+      "CONTAINERMODE": "echo",
+      "ECHO_ANSWERS": [
+        {
+          "input": [
+            "Give me url buttons"
+          ],
+          "output": {
+            "messageText": "Here are the buttons",
+            "buttons": [
+              {
+                "text": "Not url",
+                "payload": {
+                  "name": "NotUrl"
+                }
+              },
+              {
+                "text": "Url",
+                "payload": "https://www.google.com/"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Url",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "{\"name\":\"NotUrl\"}"
+          ],
+          "output": {
+            "messageText": "This is not an url",
+            "nlp": {
+              "intent": {
+                "name": "NotUrl",
+                "confidence": 0.8
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Envs": {}
+  }
+}

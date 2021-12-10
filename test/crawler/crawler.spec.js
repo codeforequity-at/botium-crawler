@@ -122,4 +122,16 @@ describe('Crawler test', function () {
     assert.equal(flatConvos[0].conversation.length, 4)
     assert.equal(flatConvos[0].path, 'Fruits;Apple{"name":"Apple"}')
   })
+
+  it('Test with simple echo bot with url button', async function () {
+    process.env.BOTIUM_CONFIG = path.resolve(__dirname, CONFIG_DIR, 'urlTest.json')
+    const driver = new BotDriver()
+    const crawler = new Crawler({ driver })
+    const convoResult = await crawler.crawl({ entryPoints: ['Give me url buttons'] })
+    const flatConvos = _.flatten(convoResult.convos)
+    assert.equal(flatConvos.length, 1)
+    assert.equal(flatConvos[0].header.name, 'Give me url butt_Convo_1')
+    assert.equal(flatConvos[0].conversation.length, 4)
+    assert.isTrue(flatConvos[0].stucked)
+  })
 })

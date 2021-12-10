@@ -29,10 +29,10 @@
   "dependencies": {
     "debug": "^4.3.2",
     "flat": "^5.0.0",
+    "is-url": "^1.2.4",
     "lodash": "^4.17.21",
     "readline-sync": "^1.4.10",
     "slugify": "^1.4.4",
-    "url-regex-safe": "^2.0.2",
     "yargs": "^17.1.1"
   },
   "devDependencies": {
