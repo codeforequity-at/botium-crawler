@@ -49,7 +49,7 @@ botText
 meText
 
 #bot
-UTT_1_bot
+UTT_bot_1_BOTTEXT
 `
     )
   })
@@ -70,7 +70,7 @@ UTT_1_bot
 meText
 
 #bot
-UTT_1_bot
+UTT_bot_1_BOTTEXT
 `
     )
   })
@@ -91,7 +91,7 @@ UTT_1_bot
 meText
 
 #bot
-UTT_M_1_bot
+UTT_SHARED_bot_1_BOTTEXT
 `
     )
   })
@@ -112,43 +112,43 @@ UTT_M_1_bot
 meText1
 
 #bot
-UTT_M_1_bot
+UTT_SHARED_bot_1_BOTTEXT1
 
 #bot
-UTT_M_2_bot
+UTT_SHARED_bot_2_BOTTEXT2
 
 #bot
-UTT_M_3_bot
+UTT_SHARED_bot_3_BOTTEXT3
 
 #bot
-UTT_M_4_bot
+UTT_SHARED_bot_4_BOTTEXT4
 
 #bot
-UTT_M_5_bot
+UTT_SHARED_bot_5_BOTTEXT5
 
 #me
 meText2
 
 #bot
-UTT_M_6_bot
+UTT_SHARED_bot_6_BOTTEXT6
 
 #bot
-UTT_M_7_bot
+UTT_SHARED_bot_7_BOTTEXT7
 
 #bot
-UTT_M_8_bot
+UTT_SHARED_bot_8_BOTTEXT8
 
 #bot
-UTT_M_9_bot
+UTT_SHARED_bot_9_BOTTEXT9
 
 #bot
-UTT_M_10_bot
+UTT_SHARED_bot_10_BOTTEXT10
 
 #bot
-UTT_M_11_bot
+UTT_SHARED_bot_11_BOTTEXT11
 
 #bot
-UTT_M_12_bot
+UTT_SHARED_bot_12_BOTTEXT12
 `
     )
   })

@@ -1,6 +1,7 @@
 const util = require('util')
 const _ = require('lodash')
 const crypto = require('crypto')
+const slugify = require('slugify')
 const debug = require('debug')('botium-crawler-convo-handler')
 const Capabilities = require('botium-core').Capabilities
 
@@ -14,9 +15,10 @@ module.exports = class ConvoHandler {
     this.mergedUtteranceNameCounter = 1
   }
 
-  async decompileConvos ({ crawlerResult, generateUtterances = true, mergeUtterances = true, lastCrawlUtteranceNames = {} }) {
+  async decompileConvos ({ crawlerResult, generateUtterances = true, mergeUtterances = true, lastCrawlUtteranceNames = {}, utterancePrefix }) {
     debug('Decompile convos')
     this.lastCrawlUtteranceNames = lastCrawlUtteranceNames
+    this.utterancePrefix = utterancePrefix
     const flatConvos = _.flatten(crawlerResult.convos)
     let scriptObjects = await Promise.all(
       flatConvos.map(async (convo) => {
@@ -54,10 +56,15 @@ module.exports = class ConvoHandler {
               const valueHash = crypto.createHash('md5').update(step.messageText).digest('hex')
               let utteranceName = this.lastCrawlUtteranceNames[valueHash]
               if (!utteranceName) {
-                while (Object.values(this.lastCrawlUtteranceNames).includes(`UTT_${this.utteranceNameCounter}_${step.sender}`)) {
+                let utterancePrefix = 'UTT'
+                if (this.utterancePrefix) {
+                  utterancePrefix = this.utterancePrefix
+                }
+                const utterancePostFix = slugify(step.messageText.substring(0, Math.min(step.messageText.length, 32)), '_').toUpperCase()
+                while (Object.values(this.lastCrawlUtteranceNames).includes(`${utterancePrefix}_${step.sender}_${this.utteranceNameCounter}_${utterancePostFix}`)) {
                   this.utteranceNameCounter++
                 }
-                utteranceName = `UTT_${this.utteranceNameCounter}_${step.sender}`
+                utteranceName = `${utterancePrefix}_${step.sender}_${this.utteranceNameCounter}_${utterancePostFix}`
                 this.utteranceNameCounter++
               }
               const utteranceValue = step.messageText
@@ -106,7 +113,7 @@ module.exports = class ConvoHandler {
     return [...this._mergeUtterances(botUtterances, 'bot'), ...this._mergeUtterances(meUtterances, 'me')]
   }
 
-  _mergeUtterances (utterances, suffix) {
+  _mergeUtterances (utterances, sender) {
     const mergedUtterances = _.uniqWith(utterances, (utt, otherUtt) =>
       utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
       otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
@@ -121,14 +128,20 @@ module.exports = class ConvoHandler {
 
       if (mergedUtt.occurances.length > 1) {
         const lines = _.map(mergedUtt.script.split(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]), (line) => line.trim())
-        const hashValue = crypto.createHash('md5').update(lines[1]).digest('hex')
+        const utteranceValue = lines[1]
+        const hashValue = crypto.createHash('md5').update(utteranceValue).digest('hex')
         if (this.lastCrawlUtteranceNames[hashValue]) {
           mergedUtt.name = this.lastCrawlUtteranceNames[hashValue]
         } else {
-          while (Object.values(this.lastCrawlUtteranceNames).includes(`UTT_M_${this.mergedUtteranceNameCounter}_${suffix}`)) {
+          let mergedUtterancePrefix = 'UTT_SHARED'
+          if (this.utterancePrefix) {
+            mergedUtterancePrefix = this.utterancePrefix
+          }
+          const utterancePostFix = slugify(utteranceValue.substring(0, Math.min(utteranceValue.length, 32)), '_').toUpperCase()
+          while (Object.values(this.lastCrawlUtteranceNames).includes(`${mergedUtterancePrefix}_${sender}_${this.mergedUtteranceNameCounter}_${utterancePostFix}`)) {
             this.mergedUtteranceNameCounter++
           }
-          mergedUtt.name = `UTT_M_${this.mergedUtteranceNameCounter}_${suffix}`
+          mergedUtt.name = `${mergedUtterancePrefix}_${sender}_${this.mergedUtteranceNameCounter}_${utterancePostFix}`
           this.mergedUtteranceNameCounter++
         }
         lines[0] = mergedUtt.name
