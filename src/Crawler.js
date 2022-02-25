@@ -5,6 +5,7 @@ const debug = require('debug')('botium-crawler-crawler')
 const debugProgress = require('debug')('botium-crawler-progress')
 const { BotDriver } = require('botium-core')
 const { getAllValuesByKeyFromObjects, startContainer, stopContainer } = require('./util')
+const slugify = require('slugify')
 
 const WELCOME_MESSAGE_ENTRY_POINT = '*welcome_message_entry_point*'
 const WELCOME_MESSAGE_ENTRY_POINT_NAME = 'WELCOME_MESSAGE'
@@ -12,7 +13,7 @@ const DEFAULT_ENTRY_POINTS = ['hello', 'help']
 const PATH_SEPARATOR = ';'
 
 module.exports = class Crawler {
-  constructor ({ driver, config }, callbackAskUser, callbackValidatior) {
+  constructor ({ driver, config }, callbackAskUser, callbackValidatior, callbackProgress) {
     if (driver) {
       this.driver = driver
     } else {
@@ -21,6 +22,7 @@ module.exports = class Crawler {
     this.containers = {}
     this.callbackValidatior = callbackValidatior
     this.callbackAskUser = callbackAskUser
+    this.callbackProgress = callbackProgress
     this.convos = []
     this.visitedPath = []
     this.pathTree = []
@@ -109,7 +111,7 @@ module.exports = class Crawler {
           } else {
             const stuckConversation = _.find(this.stuckConversations[entryPointId],
               stuckConversation => stuckConversation.path === userResponse.path)
-            this._finishConversation(stuckConversation.convo, entryPointId, userResponse.path)
+            await this._finishConversation(stuckConversation.convo, entryPointId, userResponse.path)
             debug(`Conversation successfully ended by user on '${userResponse.path}' path`)
           }
         }
@@ -128,7 +130,7 @@ module.exports = class Crawler {
           tempConvo: {
             header: {
               name: entryPointText !== WELCOME_MESSAGE_ENTRY_POINT
-                ? entryPointText.substring(0, 16)
+                ? slugify(entryPointText.substring(0, Math.min(entryPointText.length, 16)), '_').toUpperCase()
                 : WELCOME_MESSAGE_ENTRY_POINT_NAME
             },
             conversation: []
@@ -182,7 +184,7 @@ module.exports = class Crawler {
       }
 
       if (depth >= this.depth) {
-        this._finishConversation(tempConvo, entryPointId, path)
+        await this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation successfully end on '${path}' path with reaching ${depth} depth`)
         return true
       }
@@ -190,7 +192,7 @@ module.exports = class Crawler {
       if (this.endOfConversations.includes(path)) {
         tempConvo.stucked = true
         tempConvo.markedWithEndOfConversation = true
-        this._finishConversation(tempConvo, entryPointId, path)
+        await this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation successfully end on '${path}' path, because it is marked as end of conversation`)
         return true
       }
@@ -213,7 +215,7 @@ module.exports = class Crawler {
       if (this.convoDialogsHash[entryPointId].includes(convoDialogHash)) {
         tempConvo.stucked = true
         tempConvo.circleFound = true
-        this._finishConversation(tempConvo, entryPointId, path)
+        await this._finishConversation(tempConvo, entryPointId, path)
         debug(`Conversation end on '${path}' path, because a circle found`)
         return true
       }
@@ -233,7 +235,7 @@ module.exports = class Crawler {
             throw new Error('Conversation stopped at the first conversation step.')
           }
           tempConvo.stucked = true
-          this._finishConversation(tempConvo, entryPointId, path)
+          await this._finishConversation(tempConvo, entryPointId, path)
           debug(`Conversation successfully end on '${path}' path with finding an open-ended question`)
           return true
         }
@@ -279,7 +281,7 @@ module.exports = class Crawler {
             return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseExistCrit)
           })
           if (exit) {
-            this._finishConversation(tempConvo, entryPointId, requestPath)
+            await this._finishConversation(tempConvo, entryPointId, requestPath)
             debug(`Conversation successfully end on '${requestPath}' path with matching to one of the exit criteria`)
             return pathVisited
           }
@@ -330,13 +332,13 @@ module.exports = class Crawler {
       }
     } catch (e) {
       tempConvo.err = e.message
-      this._finishConversation(tempConvo, entryPointId, path)
+      await this._finishConversation(tempConvo, entryPointId, path)
       debug(`Conversation failed on '${path}' path with the following user message: `, userMessage)
       debug('error: ', e)
     }
   }
 
-  _finishConversation (tempConvo, entryPointId, path) {
+  async _finishConversation (tempConvo, entryPointId, path) {
     this.convoDialogsHash[entryPointId] = []
     const pathHash = crypto.createHash('md5').update(path).digest('hex')
     const convoName = this.lastCrawlConvoNames[pathHash]
@@ -356,6 +358,9 @@ module.exports = class Crawler {
     debug(`Conversation finished on '${path} path'`)
     this.convoCount++
     debugProgress(`${this.convoCount} conversation is detected so far`)
+    if (this.callbackProgress) {
+      await this.callbackProgress(tempConvo)
+    }
   }
 
   async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {
