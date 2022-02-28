@@ -61,7 +61,8 @@ module.exports = class ConvoHandler {
                   utterancePrefix = this.utterancePrefix
                 }
                 const utterancePostFix = slugify(step.messageText.substring(0, Math.min(step.messageText.length, 32)), '_').toUpperCase()
-                while (Object.values(this.lastCrawlUtteranceNames).includes(`${utterancePrefix}_${step.sender}_${this.utteranceNameCounter}_${utterancePostFix}`)) {
+                while (Object.values(this.lastCrawlUtteranceNames).find(lcu =>
+                  lcu.toLowerCase() === `${utterancePrefix}_${step.sender}_${this.utteranceNameCounter}_${utterancePostFix}`.toLowerCase())) {
                   this.utteranceNameCounter++
                 }
                 utteranceName = `${utterancePrefix}_${step.sender}_${this.utteranceNameCounter}_${utterancePostFix}`
@@ -138,7 +139,8 @@ module.exports = class ConvoHandler {
             mergedUtterancePrefix = this.utterancePrefix
           }
           const utterancePostFix = slugify(utteranceValue.substring(0, Math.min(utteranceValue.length, 32)), '_').toUpperCase()
-          while (Object.values(this.lastCrawlUtteranceNames).includes(`${mergedUtterancePrefix}_${sender}_${this.mergedUtteranceNameCounter}_${utterancePostFix}`)) {
+          while (Object.values(this.lastCrawlUtteranceNames).find(lcu =>
+            lcu.toLowerCase() === `${mergedUtterancePrefix}_${sender}_${this.mergedUtteranceNameCounter}_${utterancePostFix}`.toLowerCase())) {
             this.mergedUtteranceNameCounter++
           }
           mergedUtt.name = `${mergedUtterancePrefix}_${sender}_${this.mergedUtteranceNameCounter}_${utterancePostFix}`

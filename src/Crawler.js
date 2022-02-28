@@ -345,7 +345,8 @@ module.exports = class Crawler {
     if (convoName) {
       tempConvo.header.name = convoName
     } else {
-      while (Object.values(this.lastCrawlConvoNames).includes(`${tempConvo.header.name}_Convo_${this.nameCounter}`)) {
+      while (Object.values(this.lastCrawlConvoNames).find(lcc =>
+        lcc.toLowerCase() === `${tempConvo.header.name}_Convo_${this.nameCounter}`.toLowerCase())) {
         this.nameCounter++
       }
       tempConvo.header.name = `${tempConvo.header.name}_Convo_${this.nameCounter}`
