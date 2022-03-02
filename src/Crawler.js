@@ -36,7 +36,7 @@ module.exports = class Crawler {
   }
 
   async crawl ({
-    entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [],
+    entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], ignoreButtons = [],
     waitForPrompt = null, userAnswers = [], endOfConversations = [], lastCrawlConvoNames = {}
   }) {
     debugProgress(`A crawler started with the following params:
@@ -44,6 +44,7 @@ module.exports = class Crawler {
       depth: ${depth},
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
       exitCriteria: ${JSON.stringify(exitCriteria)},
+      ignoreButtons: ${JSON.stringify(ignoreButtons)},
       waitForPrompt: ${waitForPrompt},
       userAnswers: ${JSON.stringify(userAnswers, 0, 2)},
       endOfConversations: ${JSON.stringify(endOfConversations)}`
@@ -73,6 +74,7 @@ module.exports = class Crawler {
 
       this.depth = depth
       this.exitCriteria = exitCriteria
+      this.ignoreButtons = ignoreButtons
       await Promise.all(entryPoints.map(async (entryPointText) => {
         return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
       }))
@@ -197,6 +199,29 @@ module.exports = class Crawler {
         return true
       }
 
+      if (this.exitCriteria.length > 0) {
+        const buttons = await getAllValuesByKeyFromObjects(botAnswers)
+        const exit = this.exitCriteria.some((exitCrit) => {
+          const lowerCaseExistCrit = exitCrit.toLowerCase()
+          for (const botAnswer of botAnswers) {
+            if (botAnswer.messageText.toLowerCase().startsWith(lowerCaseExistCrit)) {
+              return true
+            }
+          }
+          for (const button of buttons) {
+            if (button.text.toLowerCase().startsWith(lowerCaseExistCrit)) {
+              return true
+            }
+          }
+        })
+        if (exit) {
+          tempConvo.exitCriteriaMatch = true
+          await this._finishConversation(tempConvo, entryPointId, path)
+          debug(`Conversation successfully end on '${path}' path with matching to one of the exit criteria`)
+          return true
+        }
+      }
+
       const convoDialog = {
         botMessages: []
       }
@@ -253,7 +278,21 @@ module.exports = class Crawler {
           hasStuckedRequest = true
         }
 
-        if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked) {
+        let ignore = false
+        if (this.ignoreButtons.length > 0) {
+          ignore = this.ignoreButtons.some((ignoreButton) => {
+            const lowerCaseIgnoreButton = ignoreButton.toLowerCase()
+            let exitOnPayload = false
+            if (request.payload) {
+              exitOnPayload = _.isObject(request.payload)
+                ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseIgnoreButton)
+                : request.payload.toLowerCase().startsWith(lowerCaseIgnoreButton)
+            }
+            return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseIgnoreButton)
+          })
+        }
+
+        if (!this.visitedPath[entryPointId].includes(requestPath) && !isRequestPathStucked && !ignore) {
           filteredRequests.push(request)
         }
       }
@@ -268,24 +307,6 @@ module.exports = class Crawler {
         const requestPath = request.payload
           ? path + PATH_SEPARATOR + request.text + JSON.stringify(request.payload)
           : path + PATH_SEPARATOR + request.text
-
-        if (this.exitCriteria.length > 0) {
-          const exit = this.exitCriteria.some((exitCrit) => {
-            const lowerCaseExistCrit = exitCrit.toLowerCase()
-            let exitOnPayload = false
-            if (request.payload) {
-              exitOnPayload = _.isObject(request.payload)
-                ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseExistCrit)
-                : request.payload.toLowerCase().startsWith(lowerCaseExistCrit)
-            }
-            return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseExistCrit)
-          })
-          if (exit) {
-            await this._finishConversation(tempConvo, entryPointId, requestPath)
-            debug(`Conversation successfully end on '${requestPath}' path with matching to one of the exit criteria`)
-            return pathVisited
-          }
-        }
 
         const userMessage = {
           sender: 'me'
