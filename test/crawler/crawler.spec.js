@@ -50,23 +50,23 @@ describe('Crawler test', function () {
     const crawler = new Crawler({ driver })
     const convoResult = await crawler.crawl({ entryPoints: ['Fruits'], exitCriteria: ['Gree'] })
     const flatConvos = _.flatten(convoResult.convos)
-    assert.equal(flatConvos.length, 4)
+    assert.equal(flatConvos.length, 2)
     assert.equal(flatConvos[0].header.name, 'FRUITS_Convo_1')
-    assert.equal(flatConvos[0].conversation.length, 6)
-    assert.isTrue(flatConvos[0].stucked)
-    assert.equal(flatConvos[0].path, 'Fruits;Apple{"name":"Apple"};Red')
+    assert.equal(flatConvos[0].conversation.length, 4)
+    assert.isTrue(flatConvos[0].exitCriteriaMatch)
+    assert.equal(flatConvos[0].path, 'Fruits;Apple{"name":"Apple"}')
   })
 
-  it('Test simple echo bot with exitCriteria for payload', async function () {
+  it('Test simple echo bot with ignoreButtons for payload', async function () {
     process.env.BOTIUM_CONFIG = path.resolve(__dirname, CONFIG_DIR, 'fruits.json')
     const driver = new BotDriver()
     const crawler = new Crawler({ driver })
-    const convoResult = await crawler.crawl({ entryPoints: ['Fruits'], exitCriteria: ['{"name":"Apple"}'] })
+    const convoResult = await crawler.crawl({ entryPoints: ['Fruits'], ignoreButtons: ['{"name":"Apple"}'] })
     const flatConvos = _.flatten(convoResult.convos)
-    assert.equal(flatConvos.length, 4)
+    assert.equal(flatConvos.length, 3)
     assert.equal(flatConvos[0].header.name, 'FRUITS_Convo_1')
-    assert.equal(flatConvos[0].conversation.length, 2)
-    assert.equal(flatConvos[0].path, 'Fruits;Apple{"name":"Apple"}')
+    assert.equal(flatConvos[0].conversation.length, 8)
+    assert.equal(flatConvos[0].path, 'Fruits;Pear{"name":"Pear"};Green;Give me a green apple')
   })
 
   it('Stop conversation at first step', async function () {

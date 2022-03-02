@@ -96,6 +96,7 @@ module.exports = class ConvoHandler {
       stucked: convo.stucked,
       markedWithEndOfConversation: convo.markedWithEndOfConversation,
       circleFound: convo.circleFound,
+      exitCriteriaMatch: convo.exitCriteriaMatch,
       path: convo.path,
       botUtterances: utterances.bot,
       meUtterances: utterances.me,
