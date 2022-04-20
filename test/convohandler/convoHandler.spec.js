@@ -62,7 +62,7 @@ UTT_bot_1_BOTTEXT
     const decompiledConvos = await new ConvoHandler(compiler)
       .decompileConvos({ crawlerResult, mergeUtterances: false })
     assert.equal(decompiledConvos.scriptObjects.length, 2)
-    assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 1)
+    assert.equal(decompiledConvos.scriptObjects[0].botUtterances.length, 2)
     assert.equal(decompiledConvos.scriptObjects[0].script,
       `test convo 1
 
@@ -71,6 +71,9 @@ meText
 
 #bot
 UTT_bot_1_BOTTEXT
+
+#bot
+UTT_bot_2_BOTTEXT(BOT
 `
     )
   })
@@ -92,6 +95,9 @@ meText
 
 #bot
 UTT_SHARED_bot_1_BOTTEXT
+
+#bot
+UTT_SHARED_bot_2_BOTTEXT(BOT
 `
     )
   })

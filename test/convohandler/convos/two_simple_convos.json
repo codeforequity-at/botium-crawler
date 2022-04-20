@@ -11,6 +11,10 @@
       {
         "sender": "bot",
         "messageText": "botText"
+      },
+      {
+        "sender": "bot",
+        "messageText": "botText(BOT"
       }
     ]
   },
@@ -26,6 +30,10 @@
       {
         "sender": "bot",
         "messageText": "botText"
+      },
+      {
+        "sender": "bot",
+        "messageText": "botText(BOT"
       }
     ]
   }
