@@ -32,6 +32,7 @@ module.exports = class ConvoHandler {
     }
     return {
       err: crawlerResult.err,
+      errDetails: crawlerResult.errDetails,
       scriptObjects,
       generalUtterances
     }
@@ -100,7 +101,8 @@ module.exports = class ConvoHandler {
       path: convo.path,
       botUtterances: utterances.bot,
       meUtterances: utterances.me,
-      err: convo.err
+      err: convo.err,
+      errDetails: convo.err
     }
   }
 
