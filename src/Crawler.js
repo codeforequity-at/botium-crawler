@@ -80,6 +80,7 @@ module.exports = class Crawler {
       }))
     } catch (e) {
       result.err = e.message
+      result.errDetails = e.stack
       debugProgress('Crawler finished with error: ', e)
     }
 
@@ -204,12 +205,12 @@ module.exports = class Crawler {
         const exit = this.exitCriteria.some((exitCrit) => {
           const lowerCaseExistCrit = exitCrit.toLowerCase()
           for (const botAnswer of botAnswers) {
-            if (botAnswer.messageText.toLowerCase().startsWith(lowerCaseExistCrit)) {
+            if (botAnswer.messageText && botAnswer.messageText.toLowerCase().startsWith(lowerCaseExistCrit)) {
               return true
             }
           }
           for (const button of buttons) {
-            if (button.text.toLowerCase().startsWith(lowerCaseExistCrit)) {
+            if (button.text && button.text.toLowerCase().startsWith(lowerCaseExistCrit)) {
               return true
             }
           }
@@ -288,7 +289,7 @@ module.exports = class Crawler {
                 ? JSON.stringify(request.payload).toLowerCase().startsWith(lowerCaseIgnoreButton)
                 : request.payload.toLowerCase().startsWith(lowerCaseIgnoreButton)
             }
-            return exitOnPayload || request.text.toLowerCase().startsWith(lowerCaseIgnoreButton)
+            return exitOnPayload || (request.text && request.text.toLowerCase().startsWith(lowerCaseIgnoreButton))
           })
         }
 
@@ -353,6 +354,7 @@ module.exports = class Crawler {
       }
     } catch (e) {
       tempConvo.err = e.message
+      tempConvo.errDetails = e.stack
       await this._finishConversation(tempConvo, entryPointId, path)
       debug(`Conversation failed on '${path}' path with the following user message: `, userMessage)
       debug('error: ', e)
