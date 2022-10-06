@@ -258,7 +258,7 @@ module.exports = class Crawler {
           return false
         } else {
           if (depth === 1) {
-            throw new Error('Conversation stopped at the first conversation step.')
+            throw new Error('Conversation stopped at the first conversation step, because no buttons or quick replies are found so far. Please check the execution settings in the configuration menu.')
           }
           tempConvo.stucked = true
           await this._finishConversation(tempConvo, entryPointId, path)

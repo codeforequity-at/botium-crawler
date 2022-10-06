@@ -102,7 +102,7 @@ module.exports = class ConvoHandler {
       botUtterances: utterances.bot,
       meUtterances: utterances.me,
       err: convo.err,
-      errDetails: convo.err
+      errDetails: convo.errDetails
     }
   }
 
