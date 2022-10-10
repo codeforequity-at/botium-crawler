@@ -78,7 +78,7 @@ describe('Crawler test', function () {
     assert.equal(flatConvos.length, 1)
     assert.equal(flatConvos[0].header.name, 'HELLO_Convo_1')
     assert.equal(flatConvos[0].conversation.length, 2)
-    assert.equal(flatConvos[0].err, 'Conversation stopped at the first conversation step.')
+    assert.equal(flatConvos[0].err, 'Conversation stopped at the first conversation step, because no buttons or quick replies are found so far. Please check the execution settings in the configuration menu.')
     assert.equal(flatConvos[0].path, 'Hello')
   })
 
