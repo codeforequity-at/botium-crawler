@@ -25,7 +25,6 @@ module.exports = class Crawler {
     this.callbackProgress = callbackProgress
     this.convos = []
     this.visitedPath = []
-    this.pathTree = []
     this.stuckConversations = []
     this.userAnswers = []
     this.endOfConversations = []
@@ -123,6 +122,8 @@ module.exports = class Crawler {
 
       while (!this.visitedPath[entryPointId].includes(path) &&
       !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === path)) {
+        const scriptingProvider = this.driver.BuildCompiler()
+        const scriptingContext = scriptingProvider.BuildScriptContext()
         this.containers[entryPointId] = await startContainer(this.driver)
         const params = {
           numberOfWelcomeMessages,
@@ -137,7 +138,8 @@ module.exports = class Crawler {
                 : WELCOME_MESSAGE_ENTRY_POINT_NAME
             },
             conversation: []
-          }
+          },
+          scriptingContext
         }
         if (entryPointText !== WELCOME_MESSAGE_ENTRY_POINT) {
           params.userMessage = {
@@ -146,29 +148,31 @@ module.exports = class Crawler {
           }
         }
         await this._makeConversation(params)
-        await stopContainer(this.containers[entryPointId])
+        await stopContainer(this.containers[entryPointId], this.driver)
       }
     }
   }
 
-  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo }) {
+  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo, scriptingContext }) {
     try {
       const botAnswers = []
       if (userMessage) {
         if (depth === 1 && numberOfWelcomeMessages > 0) {
           for (let i = 0; i < numberOfWelcomeMessages; i++) {
-            tempConvo.conversation.push(await this.containers[entryPointId].WaitBotSays())
+            tempConvo.conversation.push(await this.WaitBotSays(entryPointId, scriptingContext))
           }
         }
         tempConvo.conversation.push(userMessage)
-        await this.containers[entryPointId].UserSays(userMessage)
-        botAnswers.push(await this.containers[entryPointId].WaitBotSays())
+
+        this.UserSays(entryPointId, scriptingContext, userMessage)
+
+        botAnswers.push(await this.WaitBotSays(entryPointId, scriptingContext))
         if (waitForPrompt > 0) {
           const checkPoint = Date.now()
           do {
             const waitForPromptLeft = Math.max(0, waitForPrompt - (Date.now() - checkPoint))
             try {
-              botAnswers.push(await this.containers[entryPointId].WaitBotSays(null, waitForPromptLeft))
+              botAnswers.push(await this.WaitBotSays(entryPointId, scriptingContext, waitForPromptLeft))
             } catch (err) {
               if (err.message.indexOf('Bot did not respond within') < 0) throw err
             }
@@ -177,7 +181,7 @@ module.exports = class Crawler {
         }
       } else {
         for (let i = 0; i < numberOfWelcomeMessages; i++) {
-          botAnswers.push(await this.containers[entryPointId].WaitBotSays())
+          botAnswers.push(await this.WaitBotSays(entryPointId, scriptingContext))
         }
       }
 
@@ -423,7 +427,7 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       }
     }
     debug('Number of welcome messages validation is successfully ended')
-    await stopContainer(this.containers[entryPointId])
+    await stopContainer(this.containers[entryPointId], this.driver)
     return welcomeMessageEntryPoint
   }
 
@@ -435,7 +439,26 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       requests.push(...userRequest.answers.map(text => ({ text, isUserRequest: true })))
     }
     return _.filter(requests, request => !request.payload ||
-        (request.payload && _.isObject(request.payload)) ||
-        (request.payload && _.isString(request.payload) && !isUrl(request.payload)))
+      (request.payload && _.isObject(request.payload)) ||
+      (request.payload && _.isString(request.payload) && !isUrl(request.payload)))
+  }
+
+  async UserSays (entryPointId, scriptingContext, userMessage) {
+    // core does not support global user inputs, so this has no sense?
+    await scriptingContext.scriptingEvents.setUserInput({ container: this.containers[entryPointId] })
+
+    await scriptingContext.scriptingEvents.onMeStart({ container: this.containers[entryPointId] })
+    await scriptingContext.scriptingEvents.onMePrepare({ container: this.containers[entryPointId] })
+
+    await this.containers[entryPointId].UserSays(userMessage)
+
+    await scriptingContext.scriptingEvents.onMeEnd({ container: this.containers[entryPointId] })
+  }
+
+  async WaitBotSays (entryPointId, scriptingContext, waitForPromptLeft) {
+    await scriptingContext.scriptingEvents.onBotStart({ container: this.containers[entryPointId] })
+    const botMsg = await this.containers[entryPointId].WaitBotSays(null, waitForPromptLeft)
+    await scriptingContext.scriptingEvents.onBotPrepare({ container: this.containers[entryPointId], botMsg })
+    await scriptingContext.scriptingEvents.onBotEnd({ container: this.containers[entryPointId], botMsg })
   }
 }
