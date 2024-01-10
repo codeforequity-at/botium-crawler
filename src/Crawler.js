@@ -124,8 +124,6 @@ module.exports = class Crawler {
       !_.some(this.stuckConversations[entryPointId], stuckConversation => stuckConversation.path === path)) {
         const scriptingProvider = this.driver.BuildCompiler()
         const scriptingContext = scriptingProvider.BuildScriptContext()
-        // TODO testlog
-        console.log(`scriptingContext1 ===> ${JSON.stringify(scriptingContext)}`)
         this.containers[entryPointId] = await startContainer(this.driver)
         const params = {
           numberOfWelcomeMessages,
@@ -149,7 +147,6 @@ module.exports = class Crawler {
             messageText: entryPointText
           }
         }
-        console.log(`scriptingContext2 ===> ${JSON.stringify(params)}`)
 
         await this._makeConversation(params)
         await stopContainer(this.containers[entryPointId], this.driver)
@@ -170,7 +167,6 @@ module.exports = class Crawler {
 
         this.UserSays(entryPointId, scriptingContext, userMessage)
 
-        console.log(`scriptingContext3 ===> ${JSON.stringify(scriptingContext)}`)
         botAnswers.push(await this.WaitBotSays(entryPointId, scriptingContext))
         if (waitForPrompt > 0) {
           const checkPoint = Date.now()
@@ -256,8 +252,6 @@ module.exports = class Crawler {
       }
       this.convoDialogsHash[entryPointId].push(convoDialogHash)
 
-      // TODO testlog
-      console.log(`botAnswers ===> ${JSON.stringify(botAnswers)}`)
       const requests = await this._getRequests(botAnswers, path)
       if (requests.length === 0 && !this.visitedPath[entryPointId].includes(path)) {
         if (this.callbackAskUser) {
@@ -365,9 +359,6 @@ module.exports = class Crawler {
         return true
       }
     } catch (e) {
-      // TODO testlog
-      console.log(`err ===> ${e}`)
-      console.log(`err ===> ${e.stack}`)
       tempConvo.err = e.message
       tempConvo.errDetails = e.stack
       await this._finishConversation(tempConvo, entryPointId, path)
@@ -455,8 +446,6 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
   }
 
   async UserSays (entryPointId, scriptingContext, userMessage) {
-    // TODO testlog
-    console.log(`scriptingContext4 ===> ${JSON.stringify(scriptingContext)}`)
     // core does not support global user inputs, so this has no sense?
     await scriptingContext.scriptingEvents.setUserInput({ container: this.containers[entryPointId] })
 
