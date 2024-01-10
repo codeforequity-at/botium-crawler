@@ -9,14 +9,18 @@ const SOURCE_DATA = 'sourceData'
 const BUTTONS = 'buttons'
 
 const startContainer = async (driver) => {
-  const container = await driver.Build()
   debug('Conversation container built, now starting')
+  const container = await driver.Build()
+  const scriptingProvider = driver.BuildCompiler()
+  const scriptingContext = scriptingProvider.BuildScriptContext()
   try {
     await container.Start()
+    await scriptingContext.scriptingEvents.onConvoBegin({ container })
     debug('Conversation container started.')
     return container
   } catch (err) {
     try {
+      await scriptingContext.scriptingEvents.onConvoEnd({ container })
       await container.Stop()
     } catch (err) {
       debug(`Conversation Stop failed: ${err}`)
@@ -30,9 +34,12 @@ const startContainer = async (driver) => {
   }
 }
 
-const stopContainer = async (container) => {
+const stopContainer = async (container, driver) => {
+  const scriptingProvider = driver.BuildCompiler()
+  const scriptingContext = scriptingProvider.BuildScriptContext()
   if (container) {
     try {
+      await scriptingContext.scriptingEvents.onConvoEnd({ container })
       await container.Stop()
     } catch (err) {
       debug(`Conversation Stop failed: ${err}`)
