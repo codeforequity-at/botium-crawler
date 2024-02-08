@@ -112,7 +112,7 @@ const _persistScriptsInFiles = ({ scriptObjects, generalUtterances }) => {
     const script = scriptObject.script
     const scriptName = path.join(scriptOutDir,
       slugify(
-        script.substring(0, script.indexOf(compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))).toUpperCase() +
+        script.substring(0, script.indexOf(compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'))).toUpperCase() +
       '.convo.txt')
     fs.writeFileSync(scriptName, script)
     debug(`The '${scriptName}' file is persisted`)

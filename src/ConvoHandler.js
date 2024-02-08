@@ -49,7 +49,7 @@ module.exports = class ConvoHandler {
       if (!step.messageText || !step.messageText.length) {
         statistics.empty++
       } else {
-        if (step.messageText.includes(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) {
+        if (step.messageText.includes(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')) {
           statistics.multirow++
         } else {
           if (step.sender === 'bot' || (step.sender === 'me' && step.userFeedback)) {
@@ -73,7 +73,7 @@ module.exports = class ConvoHandler {
               step.messageText = utteranceName
 
               utterances[step.sender].push({
-                script: utteranceName + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] + utteranceValue,
+                script: utteranceName + (this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n') + utteranceValue,
                 name: utteranceName
               })
 
@@ -119,19 +119,19 @@ module.exports = class ConvoHandler {
 
   _mergeUtterances (utterances, sender) {
     const mergedUtterances = _.uniqWith(utterances, (utt, otherUtt) =>
-      utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
-      otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]))
+      utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')) ===
+      otherUtt.script.substring(otherUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'))
     ).map(u => ({ ...u }))
 
     for (const mergedUtt of mergedUtterances) {
       mergedUtt.occurances = _.filter(utterances,
         (utt) =>
-          utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])) ===
-          mergedUtt.script.substring(mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])))
+          utt.script.substring(utt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')) ===
+          mergedUtt.script.substring(mergedUtt.script.indexOf(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')))
         .map((utt) => utt.name)
 
       if (mergedUtt.occurances.length > 1) {
-        const lines = _.map(mergedUtt.script.split(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]), (line) => line.trim())
+        const lines = _.map(mergedUtt.script.split(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'), (line) => line.trim())
         const utteranceValue = lines[1]
         const hashValue = crypto.createHash('md5').update(utteranceValue).digest('hex')
         if (this.lastCrawlUtteranceNames[hashValue]) {
@@ -150,7 +150,7 @@ module.exports = class ConvoHandler {
           this.mergedUtteranceNameCounter++
         }
         lines[0] = mergedUtt.name
-        mergedUtt.script = lines.join(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
+        mergedUtt.script = lines.join(this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')
       }
     }
 
@@ -164,8 +164,8 @@ module.exports = class ConvoHandler {
         for (const scriptObject of replacedScriptObjects) {
           for (const occurance of utterance.occurances) {
             scriptObject.script = scriptObject.script.replace(
-              new RegExp(_.escapeRegExp(occurance + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL]), 'g'),
-              utterance.name + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL])
+              new RegExp(_.escapeRegExp(occurance + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'), 'g'),
+              utterance.name + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')
             _.remove(scriptObject.botUtterances, u => u.name === occurance)
             _.remove(scriptObject.meUtterances, u => u.name === occurance)
           }
