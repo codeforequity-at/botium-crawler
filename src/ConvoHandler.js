@@ -164,8 +164,8 @@ module.exports = class ConvoHandler {
         for (const scriptObject of replacedScriptObjects) {
           for (const occurance of utterance.occurances) {
             scriptObject.script = scriptObject.script.replace(
-              new RegExp(_.escapeRegExp(occurance + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'), 'g'),
-              utterance.name + this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')
+              new RegExp(_.escapeRegExp(occurance + (this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n')), 'g'),
+              utterance.name + (this.compiler.caps[Capabilities.SCRIPTING_TXT_EOL] || '\n'))
             _.remove(scriptObject.botUtterances, u => u.name === occurance)
             _.remove(scriptObject.meUtterances, u => u.name === occurance)
           }
