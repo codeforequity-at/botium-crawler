@@ -35,12 +35,13 @@ module.exports = class Crawler {
   }
 
   async crawl ({
-    entryPoints = [], numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], ignoreButtons = [],
+    entryPoints = [], dynamicWelcomeMessages = false, numberOfWelcomeMessages = 0, depth = 5, exitCriteria = [], ignoreButtons = [],
     waitForPrompt = null, userAnswers = [], endOfConversations = [], lastCrawlConvoNames = {}
   }) {
     debugProgress(`A crawler started with the following params:
       entryPoints: ${JSON.stringify(entryPoints)},
       depth: ${depth},
+      dynamicWelcomeMessages: ${dynamicWelcomeMessages}
       numberOfWelcomeMessages: ${numberOfWelcomeMessages},
       exitCriteria: ${JSON.stringify(exitCriteria)},
       ignoreButtons: ${JSON.stringify(ignoreButtons)},
@@ -60,7 +61,7 @@ module.exports = class Crawler {
       this.endOfConversations = endOfConversations
       this.lastCrawlConvoNames = lastCrawlConvoNames
 
-      const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(numberOfWelcomeMessages)
+      const welcomeMessageEntryPoint = await this._validateNumberOfWelcomeMessage(dynamicWelcomeMessages, numberOfWelcomeMessages)
 
       let hasWelcomeAndEntryPoint = false
       if (entryPoints.length > 0 && welcomeMessageEntryPoint && welcomeMessageEntryPoint.length > 0) {
@@ -75,7 +76,15 @@ module.exports = class Crawler {
       this.exitCriteria = exitCriteria
       this.ignoreButtons = ignoreButtons
       await Promise.all(entryPoints.map(async (entryPointText) => {
-        return this._makeConversations(entryPointText, hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText, entryPointId++, numberOfWelcomeMessages, waitForPrompt)
+        return this._makeConversations(
+          {
+            entryPointText,
+            path: hasWelcomeAndEntryPoint ? `${WELCOME_MESSAGE_ENTRY_POINT};${entryPointText}` : entryPointText,
+            entryPointId: entryPointId++,
+            dynamicWelcomeMessages,
+            numberOfWelcomeMessages,
+            waitForPrompt
+          })
       }))
     } catch (e) {
       result.err = e.message
@@ -90,7 +99,7 @@ module.exports = class Crawler {
     return result
   }
 
-  async _makeConversations (entryPointText, path, entryPointId, numberOfWelcomeMessages, waitForPrompt) {
+  async _makeConversations ({ entryPointText, path, entryPointId, dynamicWelcomeMessages, numberOfWelcomeMessages, waitForPrompt }) {
     if (typeof entryPointText !== 'string') {
       debug('The entryPoints param has to consist of strings')
       return
@@ -126,6 +135,7 @@ module.exports = class Crawler {
         const scriptingContext = scriptingProvider.BuildScriptContext()
         this.containers[entryPointId] = await startContainer(this.driver)
         const params = {
+          dynamicWelcomeMessages,
           numberOfWelcomeMessages,
           depth: 1,
           path,
@@ -154,14 +164,12 @@ module.exports = class Crawler {
     }
   }
 
-  async _makeConversation ({ userMessage, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo, scriptingContext }) {
+  async _makeConversation ({ userMessage, dynamicWelcomeMessages, numberOfWelcomeMessages, depth, path, entryPointId, waitForPrompt, tempConvo, scriptingContext }) {
     try {
       const botAnswers = []
       if (userMessage) {
-        if (depth === 1 && numberOfWelcomeMessages > 0) {
-          for (let i = 0; i < numberOfWelcomeMessages; i++) {
-            tempConvo.conversation.push(await this.WaitBotSays(entryPointId, scriptingContext))
-          }
+        if (depth === 1) {
+          tempConvo.conversation.push(...(await this._waitForWelcomeMessages({ dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId, scriptingContext })))
         }
         tempConvo.conversation.push(userMessage)
 
@@ -181,9 +189,7 @@ module.exports = class Crawler {
           while (Date.now() - checkPoint <= waitForPrompt)
         }
       } else {
-        for (let i = 0; i < numberOfWelcomeMessages; i++) {
-          botAnswers.push(await this.WaitBotSays(entryPointId, scriptingContext))
-        }
+        tempConvo.conversation.push(...(await this._waitForWelcomeMessages({ dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId, scriptingContext })))
       }
 
       tempConvo.conversation.push(...botAnswers)
@@ -393,14 +399,49 @@ module.exports = class Crawler {
     }
   }
 
-  async _validateNumberOfWelcomeMessage (numberOfWelcomeMessages, entryPointId = 'general') {
+  async _waitForWelcomeMessages ({ dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId, scriptingContext }) {
+    const welcomeMessages = []
+    if (dynamicWelcomeMessages) {
+      let waitForNextBotMessage = true
+      while (waitForNextBotMessage) {
+        try {
+          welcomeMessages.push(await this.WaitBotSays(entryPointId, scriptingContext))
+        } catch (e) {
+          waitForNextBotMessage = false
+        }
+      }
+    } else if (numberOfWelcomeMessages > 0) {
+      for (let i = 0; i < numberOfWelcomeMessages; i++) {
+        welcomeMessages.push(await this.WaitBotSays(entryPointId, scriptingContext))
+      }
+    }
+    return welcomeMessages
+  }
+
+  async _validateNumberOfWelcomeMessage (dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId = 'general') {
     let welcomeMessageEntryPoint
     this.containers[entryPointId] = await startContainer(this.driver)
-    if (numberOfWelcomeMessages > 0) {
+    if (dynamicWelcomeMessages) {
+      let waitForNextMessage = true
+      let foundWelcomeMessage = false
+      while (waitForNextMessage) {
+        try {
+          await this.containers[entryPointId].WaitBotSays()
+          foundWelcomeMessage = true
+        } catch (err) {
+          waitForNextMessage = false
+          if (err.message.indexOf('Bot did not respond within') < 0) throw err
+        }
+      }
+      if (foundWelcomeMessage) {
+        welcomeMessageEntryPoint = [WELCOME_MESSAGE_ENTRY_POINT]
+      }
+    } else if (numberOfWelcomeMessages > 0) {
       for (let i = 0; i < numberOfWelcomeMessages; i++) {
         try {
           await this.containers[entryPointId].WaitBotSays()
-        } catch (e) {
+        } catch (err) {
+          if (err.message.indexOf('Bot did not respond within') < 0) throw err
           throw new Error(`This chat bot has less welcome message than ${numberOfWelcomeMessages}.
 Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`)
         }
@@ -408,7 +449,8 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       let hasCorrectNumberOfWelcomeMessage = false
       try {
         await this.containers[entryPointId].WaitBotSays()
-      } catch (e) {
+      } catch (err) {
+        if (err.message.indexOf('Bot did not respond within') < 0) throw err
         hasCorrectNumberOfWelcomeMessage = true
         welcomeMessageEntryPoint = [WELCOME_MESSAGE_ENTRY_POINT]
       }
@@ -420,7 +462,8 @@ Please set 'numberOfWelcomeMessages' to the correct number of welcome messages.`
       let hasDefaultWelcomeMessage = true
       try {
         await this.containers[entryPointId].WaitBotSays()
-      } catch (e) {
+      } catch (err) {
+        if (err.message.indexOf('Bot did not respond within') < 0) throw err
         hasDefaultWelcomeMessage = false
       }
       if (hasDefaultWelcomeMessage) {

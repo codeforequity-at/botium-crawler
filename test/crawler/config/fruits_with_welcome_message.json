@@ -1,0 +1,167 @@
+{
+  "botium": {
+    "Capabilities": {
+      "RETRY_USERSAYS_ONERROR_REGEXP": [],
+      "RETRY_USERSAYS_NUMRETRIES": null,
+      "RETRY_USERSAYS_FACTOR": null,
+      "RETRY_USERSAYS_MINTIMEOUT": null,
+      "SCRIPTING_MATCHING_MODE": "wildcardIgnoreCase",
+      "WAITFORBOTTIMEOUT": 100,
+      "CONTAINERMODE": "echo",
+      "ECHO_WELCOMEMESSAGE": [  "Hello!",  "How can I help you?"],
+      "ECHO_ANSWERS": [
+        {
+          "input": [
+            "Fruits"
+          ],
+          "output": {
+            "messageText": "Here are some fruits",
+            "buttons": [
+              {
+                "text": "Apple",
+                "payload": {
+                  "name": "Apple"
+                }
+              },
+              {
+                "text": "Pear",
+                "payload": {
+                  "name": "Pear"
+                }
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Fruits",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "{\"name\":\"Apple\"}"
+          ],
+          "output": {
+            "messageText": "Apple colors",
+            "buttons": [
+              {
+                "text": "Red"
+              },
+              {
+                "text": "Green"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Apple",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "{\"name\":\"Pear\"}"
+          ],
+          "output": {
+            "messageText": "Pear colors",
+            "buttons": [
+              {
+                "text": "Green"
+              },
+              {
+                "text": "Yellow"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Pear",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Red"
+          ],
+          "output": {
+            "messageText": "Here is your red apple",
+            "nlp": {
+              "intent": {
+                "name": "Red",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Yellow"
+          ],
+          "output": {
+            "messageText": "Here is your yellow pear",
+            "nlp": {
+              "intent": {
+                "name": "Yellow",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Green"
+          ],
+          "output": {
+            "messageText": "Which one you want?",
+            "buttons": [
+              {
+                "text": "Give me a green apple"
+              },
+              {
+                "text": "Give me a green pear"
+              }
+            ],
+            "nlp": {
+              "intent": {
+                "name": "Green",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Give me a green apple"
+          ],
+          "output": {
+            "messageText": "Here is your green apple",
+            "nlp": {
+              "intent": {
+                "name": "Give me a green apple",
+                "confidence": 0.8
+              }
+            }
+          }
+        },
+        {
+          "input": [
+            "Give me a green pear"
+          ],
+          "output": {
+            "messageText": "Here is your green pear",
+            "nlp": {
+              "intent": {
+                "name": "Give me a green pear",
+                "confidence": 0.8
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Envs": {}
+  }
+}
