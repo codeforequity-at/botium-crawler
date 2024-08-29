@@ -189,7 +189,7 @@ module.exports = class Crawler {
           while (Date.now() - checkPoint <= waitForPrompt)
         }
       } else {
-        tempConvo.conversation.push(...(await this._waitForWelcomeMessages({ dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId, scriptingContext })))
+        botAnswers.push(...(await this._waitForWelcomeMessages({ dynamicWelcomeMessages, numberOfWelcomeMessages, entryPointId, scriptingContext })))
       }
 
       tempConvo.conversation.push(...botAnswers)
